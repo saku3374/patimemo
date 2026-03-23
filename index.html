@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ぱちメモ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #000; --border: #2a2a2a; --accent: #4da6ff;
+  --green: #4cd964; --red: #ff3b30; --text: #fff; --muted: #555; --gbtn: #3a3a3c;
+  --gold: #ffcc00;
+}
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, 'Hiragino Sans', sans-serif;
+  max-width: 430px; margin: 0 auto;
+}
+body { display: flex; flex-direction: column; }
+
+/* ===== TOP NAV ===== */
+.top-nav {
+display: flex; justify-content: space-around; align-items: center;
+padding: 8px 0 6px; border-bottom: 1px solid var(–border);
+background: var(–bg); flex-shrink: 0; z-index: 10;
+}
+.tnav { font-size: 13px; color: var(–muted); cursor: pointer; padding: 4px 8px; }
+.tnav.active { color: var(–accent); font-weight: 700; }
+.tnav.white { color: #fff; font-weight: 700; }
+
+/* ===== BOTTOM TAB ===== */
+.bottom-tab {
+display: flex; background: #1c1c1e; border-top: 1px solid var(–border); flex-shrink: 0;
+}
+.btab {
+flex: 1; display: flex; flex-direction: column; align-items: center;
+padding: 5px 0 12px; cursor: pointer; color: var(–muted); font-size: 10px; gap: 2px;
+}
+.btab.active { color: var(–accent); }
+.btab-icon { font-size: 18px; }
+
+/* ===== SCREENS ===== */
+.screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ===== メイン画面：上下2分割 ===== */
+#screen-main {
+display: none; flex-direction: column; overflow: hidden;
+}
+#screen-main.active { display: flex; }
+
+/* 上段：ログエリア（余白を全部取る） */
+.log-section {
+flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0;
+}
+
+/* 下段：入力エリア（固定高さ） */
+.input-section {
+flex-shrink: 0;
+border-top: 2px solid var(–border);
+display: flex; flex-direction: column;
+}
+.mochi-box {
+background: #060e06; border-bottom: 1px solid #1a2a1a;
+padding: 6px 10px;
+}
+.mochi-title { font-size: 9px; color: var(–green); font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+.mochi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.mc {
+background: #0a150a; border: 1px solid #1e301e; border-radius: 7px;
+padding: 5px 6px; text-align: center; cursor: pointer;
+}
+.mc.sel { border-color: var(–accent); background: #081520; }
+.mc .mcl { font-size: 9px; color: var(–muted); }
+.mc .mcv { font-size: 15px; font-weight: 700; color: #bbb; }
+.mc.sel .mcl { color: var(–accent); }
+.mc.sel .mcv { color: #fff; }
+.mochi-total { text-align: right; margin-top: 4px; font-size: 11px; color: var(–muted); }
+.mochi-total strong { color: var(–gold); font-size: 14px; margin-left: 4px; }
+
+/* フィールド選択（回転・現金・獲得） */
+.fsels {
+display: flex; gap: 5px; padding: 5px 10px;
+background: #0a0a0a; border-bottom: 1px solid var(–border);
+}
+.fsel {
+flex: 1; padding: 5px 4px; border-radius: 7px;
+background: #1a1a1a; border: 1px solid var(–border);
+text-align: center; cursor: pointer;
+}
+.fsel.sel { border-color: var(–accent); background: #081520; }
+.fsel .fsl { font-size: 9px; color: var(–muted); margin-bottom: 1px; }
+.fsel .fsv { font-size: 13px; font-weight: 700; color: #bbb; }
+.fsel.sel .fsl { color: var(–accent); }
+.fsel.sel .fsv { color: #fff; }
+
+/* 入力エリア下段：ボタン＋テンキー横並び */
+.input-bottom {
+display: flex; gap: 0; background: #060606;
+padding: 6px 8px; align-items: flex-start;
+}
+
+/* 稼働ボタン（右側） */
+.act-btns {
+display: grid; grid-template-columns: 1fr 1fr;
+gap: 5px; flex: 1; margin-left: 8px;
+align-content: start;
+}
+.abtn {
+padding: 11px 4px; border-radius: 9px; border: none;
+font-size: 12px; font-weight: 700; font-family: inherit;
+cursor: pointer; -webkit-appearance: none; text-align: center;
+}
+.abtn:active { opacity: 0.6; }
+.abtn-g { background: var(–green); color: #000; }
+.abtn-d { background: var(–gbtn); color: var(–text); }
+.abtn-r { background: #c0392b; color: #fff; }
+
+/* テンキー（左側・小さめ） */
+.numpad { flex-shrink: 0; }
+.nrow { display: flex; gap: 4px; margin-bottom: 4px; }
+.nk {
+width: 52px; height: 44px; border-radius: 8px; border: none;
+background: #2a2a2e; color: var(–text); font-size: 18px; font-weight: 500;
+font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.nk:active { background: #444; }
+.nk.del { background: #1e1e1e; font-size: 15px; }
+.nk.clr { background: #1e1e1e; font-size: 11px; font-weight: 700; color: var(–red); }
+.nk.dot { font-size: 13px; font-weight: 700; }
+/* 0.5kボタン行（現金選択時のみ） */
+.dot-row { display: none; }
+.dot-row.show { display: flex; }
+
+/* 下段：ログエリア */
+.log-section {
+flex: 1; overflow: hidden; display: flex; flex-direction: column;
+}
+.log-header {
+display: flex; justify-content: space-between; align-items: center;
+padding: 6px 10px; border-bottom: 1px solid var(–border);
+background: #080808; flex-shrink: 0;
+}
+.log-header-title { font-size: 11px; color: var(–muted); font-weight: 700; letter-spacing: 0.5px; }
+.copy-btn {
+font-size: 11px; color: var(–accent); background: none; border: 1px solid var(–accent);
+border-radius: 6px; padding: 3px 10px; cursor: pointer; font-family: inherit;
+}
+.copy-btn:active { opacity: 0.6; }
+.log-scroll { flex: 1; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.log-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 460px; }
+.log-table th {
+background: #111; color: var(–muted); padding: 6px 5px;
+text-align: center; font-weight: 600; white-space: nowrap;
+position: sticky; top: 0; z-index: 1; border-bottom: 1px solid var(–border);
+}
+.log-table td { padding: 7px 5px; text-align: center; border-bottom: 1px solid #111; white-space: nowrap; }
+.log-table td.op { color: var(–text); font-weight: 700; font-size: 11px; }
+.log-table td.t { color: var(–accent); cursor: pointer; text-decoration: underline; font-size: 11px; }
+.log-table td.n { color: #888; font-size: 11px; }
+.log-table tr.total td { background: #0d0d0d; color: var(–text); font-weight: 700; border-top: 1px solid #333; }
+.log-table tr.total td.red { color: var(–red); }
+.del-row { padding: 8px 10px; flex-shrink: 0; }
+.del-btn { width: 100%; padding: 11px; border-radius: 10px; border: none; background: #c0392b; color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; }
+
+/* ===== 計算画面 ===== */
+.rrow {
+display: flex; align-items: center; justify-content: space-between;
+padding: 13px 16px; border-bottom: 1px solid #1a1a1a; background: #080808;
+}
+.rrow .rl { font-size: 15px; color: #ddd; }
+.rrow .rv { font-size: 17px; }
+.rv .u { font-size: 12px; color: var(–muted); margin-left: 3px; }
+.rv.pos { color: var(–green); }
+.rv.neg { color: var(–red); }
+.rv.acc { color: var(–accent); }
+
+/* ===== 設定画面 ===== */
+.stitle { text-align: center; font-size: 17px; font-weight: 700; padding: 14px 16px; flex-shrink: 0; }
+.srow {
+display: flex; align-items: center; justify-content: space-between;
+padding: 13px 16px; border-bottom: 1px solid #1a1a1a; gap: 10px;
+}
+.srow .sl { font-size: 14px; line-height: 1.4; }
+.srow .sr { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.srow input {
+background: #1a1a1a; border: 1px solid var(–border); border-radius: 8px;
+color: var(–text); font-size: 16px; text-align: right;
+padding: 7px 10px; width: 90px; outline: none; font-family: inherit;
+}
+.srow input:focus { border-color: var(–accent); }
+.snote { font-size: 11px; color: var(–accent); white-space: nowrap; }
+
+/* ===== 結果画面 ===== */
+.rbig { text-align: center; padding: 20px 16px; border-bottom: 1px solid var(–border); }
+.rbig .rbl { font-size: 12px; color: var(–muted); margin-bottom: 4px; }
+.rbig .rbv { font-size: 36px; font-weight: 700; }
+.rbig .rbv.pos { color: var(–green); }
+.rbig .rbv.neg { color: var(–red); }
+.rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(–border); }
+.rcell { background: var(–bg); padding: 12px; text-align: center; }
+.rcell .rcl { font-size: 11px; color: var(–muted); margin-bottom: 3px; }
+.rcell .rcv { font-size: 19px; font-weight: 600; }
+.rcell .rcv.pos { color: var(–green); }
+.rcell .rcv.neg { color: var(–red); }
+.rcell .rcu { font-size: 11px; color: var(–muted); margin-left: 2px; }
+.empty { padding: 50px 20px; text-align: center; color: var(–muted); font-size: 14px; }
+
+/* ===== 時刻モーダル ===== */
+.modal-ov {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.8); z-index: 300;
+align-items: center; justify-content: center;
+}
+.modal-ov.on { display: flex; }
+.modal-box {
+background: #1c1c1e; border-radius: 16px; padding: 20px 18px; width: 270px;
+border: 1px solid var(–border);
+}
+.modal-title { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 14px; }
+.modal-time { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.mtp {
+background: #2a2a2e; border: 2px solid var(–border); border-radius: 9px;
+color: var(–text); font-size: 30px; font-weight: 700; text-align: center;
+width: 68px; padding: 8px 0; cursor: pointer;
+}
+.mtp.on { border-color: var(–accent); }
+.mtc { font-size: 26px; font-weight: 700; color: var(–muted); }
+.mtabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.mtab {
+flex: 1; padding: 7px; border-radius: 7px; border: none;
+font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.modal-np { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 12px; }
+.mnk {
+padding: 12px; border-radius: 9px; border: none;
+background: #2a2a2e; color: var(–text); font-size: 19px;
+font-family: inherit; cursor: pointer;
+}
+.mnk:active { background: #444; }
+.mnk.s { background: #1e1e1e; font-size: 13px; font-weight: 700; }
+.modal-btns { display: flex; gap: 7px; }
+.mbtn {
+flex: 1; padding: 13px; border-radius: 9px; border: none;
+font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.mbtn.cancel { background: #3a3a3c; color: #fff; }
+.mbtn.ok { background: var(–accent); color: #000; }
+</style>
+
+</head>
+<body>
+
+<div class="top-nav">
+  <span class="tnav" id="tn-settings" onclick="showSub('settings')">前提条件</span>
+  <span class="tnav white" id="tn-main" onclick="switchTab('main')">入力</span>
+  <span class="tnav" id="tn-calc" onclick="switchTab('calc')">計算</span>
+</div>
+
+<!-- ===== メイン画面 ===== -->
+
+<div class="screen" id="screen-main">
+
+  <!-- 上段：ログ -->
+
+  <div class="log-section">
+    <div class="log-header">
+      <span class="log-header-title">稼働ログ</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="copy-btn" onclick="copyLog()">📋 コピー</button>
+        <button class="copy-btn" onclick="undoLast()" style="border-color:var(--red);color:var(--red);">削除</button>
+      </div>
+    </div>
+    <div class="log-scroll">
+      <table class="log-table">
+        <thead><tr>
+          <th>操作</th><th>時刻</th><th>経過</th><th>乱数</th><th>回転</th>
+          <th>消費</th><th>計数</th><th>現金</th><th>獲得</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 下段：入力エリア -->
+
+  <div class="input-section">
+
+```
+<!-- 持ち玉＋回転・現金・獲得 -->
+<div class="mochi-box">
+  <div class="mochi-grid">
+    <div class="mc sel" id="mc-replay" onclick="foc('replay')">
+      <div class="mcl">再プレイ残り</div>
+      <div class="mcv" id="mv-replay">0</div>
+    </div>
+    <div class="mc" id="mc-keisu" onclick="foc('keisu')">
+      <div class="mcl">計数持ち玉</div>
+      <div class="mcv" id="mv-keisu">0</div>
+    </div>
+    <div class="mc" id="mc-uwazara" onclick="foc('uwazara')">
+      <div class="mcl">上皿余玉</div>
+      <div class="mcv" id="mv-uwazara">0</div>
+    </div>
+  </div>
+  <div class="mochi-total">手持ち合計<strong id="mochiTotal">0</strong>個</div>
+</div>
+
+<div class="fsels">
+  <div class="fsel" id="fs-kaiten" onclick="foc('kaiten')">
+    <div class="fsl">回転数</div>
+    <div class="fsv" id="fv-kaiten">—</div>
+  </div>
+  <div class="fsel" id="fs-genkin" onclick="foc('genkin')">
+    <div class="fsl">現金(k)</div>
+    <div class="fsv" id="fv-genkin">—</div>
+  </div>
+  <div class="fsel" id="fs-kakutoku" onclick="foc('kakutoku')">
+    <div class="fsl">獲得玉数</div>
+    <div class="fsv" id="fv-kakutoku">—</div>
+  </div>
+</div>
+
+<!-- 編集時の保存・キャンセル -->
+<div id="edit-bar" style="display:flex;gap:6px;padding:5px 10px;background:#0a1a0a;border-bottom:1px solid var(--border);">
+  <button id="btn-save" onclick="saveEditRow()" style="display:none;flex:1;padding:9px;border-radius:8px;border:none;background:var(--green);color:#000;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">✓ 保存</button>
+  <button id="btn-cancel-edit" onclick="cancelEdit()" style="display:none;flex:1;padding:9px;border-radius:8px;border:none;background:#3a3a3c;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">✕ キャンセル</button>
+</div>
+
+<!-- テンキー（左）＋ボタン（右） -->
+<div class="input-bottom">
+  <!-- テンキー：左下 -->
+  <div class="numpad">
+    <div class="nrow">
+      <button class="nk" onclick="ni('7')">7</button>
+      <button class="nk" onclick="ni('8')">8</button>
+      <button class="nk" onclick="ni('9')">9</button>
+    </div>
+    <div class="nrow">
+      <button class="nk" onclick="ni('4')">4</button>
+      <button class="nk" onclick="ni('5')">5</button>
+      <button class="nk" onclick="ni('6')">6</button>
+    </div>
+    <div class="nrow">
+      <button class="nk" onclick="ni('1')">1</button>
+      <button class="nk" onclick="ni('2')">2</button>
+      <button class="nk" onclick="ni('3')">3</button>
+    </div>
+    <div class="nrow">
+      <button class="nk clr" onclick="nc()">CLR</button>
+      <button class="nk" onclick="ni('0')">0</button>
+      <button class="nk del" onclick="nd()">⌫</button>
+    </div>
+    <div class="nrow dot-row" id="dot-row">
+      <button class="nk dot" style="width:108px;" onclick="ni('0.5')">+0.5k</button>
+      <button class="nk dot" onclick="ni('.')">.</button>
+    </div>
+  </div>
+
+  <!-- 稼働ボタン：右 -->
+  <div class="act-btns">
+    <button class="abtn abtn-g" id="btn-start" onclick="act('start')">スタート</button>
+    <button class="abtn abtn-d" id="btn-hatsu" onclick="act('hatsu')">初当たり</button>
+    <button class="abtn abtn-d" id="btn-atariend" onclick="act('atariend')">当たり終</button>
+    <button class="abtn abtn-d" id="btn-tama" onclick="act('tamashometsu')">玉消滅</button>
+    <button class="abtn abtn-r" id="btn-end" onclick="act('kadoend')" style="grid-column:span 2;">稼働終了</button>
+  </div>
+</div>
+```
+
+  </div>
+
+</div>
+
+<!-- ===== 計算画面 ===== -->
+
+<div class="screen" id="screen-calc">
+  <div style="overflow-y:auto;flex:1;">
+    <div class="rrow"><span class="rl">1kスタート</span><span class="rv acc" id="r-1k">—<span class="u">回転</span></span></div>
+    <div class="rrow"><span class="rl">持ち玉ボーダー</span><span class="rv" id="r-border">—<span class="u">回転</span></span></div>
+    <div class="rrow"><span class="rl">持ち玉時給</span><span class="rv" id="r-jikyu">—<span class="u">円/h</span></span></div>
+    <div class="rrow"><span class="rl">持ち玉期待値</span><span class="rv" id="r-kitai">—<span class="u">円</span></span></div>
+    <div class="rrow"><span class="rl">総回転数</span><span class="rv" id="r-sokaiten">—<span class="u">回</span></span></div>
+    <div class="rrow"><span class="rl">総消費玉数</span><span class="rv" id="r-soshohi">—<span class="u">個</span></span></div>
+    <div class="rrow"><span class="rl">RB（平均獲得玉）</span><span class="rv" id="r-rb">—<span class="u">玉</span></span></div>
+  </div>
+</div>
+
+<!-- ===== 前提条件 ===== -->
+
+<div class="screen" id="screen-settings">
+  <div style="overflow-y:auto;flex:1;">
+    <div class="stitle">前提条件</div>
+    <div class="srow">
+      <span class="sl">貸し玉個数<br><small style="color:var(--muted);font-size:11px">1kあたり</small></span>
+      <div class="sr">
+        <input type="number" id="s-kashi" value="250" inputmode="numeric" oninput="updateCfg()">
+        <span class="snote" id="sn-kashi">4円/玉</span>
+      </div>
+    </div>
+    <div class="srow">
+      <span class="sl">交換率<br><small style="color:var(--muted);font-size:11px">景品交換 ○玉→1000円</small></span>
+      <div class="sr">
+        <input type="number" id="s-koukan" value="330" inputmode="numeric" oninput="updateCfg()">
+        <span class="snote" id="sn-koukan">3.03円/玉</span>
+      </div>
+    </div>
+    <div class="srow">
+      <span class="sl">トータル確率(1R)</span>
+      <div class="sr">
+        <span style="color:var(--muted);margin-right:4px;">1/</span>
+        <input type="number" id="s-prob" value="9.1" step="0.1" inputmode="decimal" oninput="updateCfg()">
+      </div>
+    </div>
+    <div class="srow">
+      <span class="sl">1時間あたり通常回転数</span>
+      <div class="sr">
+        <input type="number" id="s-kph" value="220" inputmode="numeric" oninput="updateCfg()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 結果画面 ===== -->
+
+<div class="screen" id="screen-result">
+  <div style="overflow-y:auto;flex:1;" id="resultDiv">
+    <div class="empty">稼働終了後に結果が表示されます</div>
+  </div>
+</div>
+
+<!-- ===== 時刻モーダル ===== -->
+
+<div class="modal-ov" id="timeModal">
+  <div class="modal-box">
+    <div class="modal-title">時刻を修正</div>
+    <div class="modal-time">
+      <div class="mtp on" id="mtp-h" onclick="mfoc('h')">00</div>
+      <div class="mtc">:</div>
+      <div class="mtp" id="mtp-m" onclick="mfoc('m')">00</div>
+    </div>
+    <div class="mtabs">
+      <button class="mtab" id="mtab-h" onclick="mfoc('h')" style="background:var(--accent);color:#000;">時</button>
+      <button class="mtab" id="mtab-m" onclick="mfoc('m')" style="background:#3a3a3c;color:#fff;">分</button>
+    </div>
+    <div class="modal-np">
+      <button class="mnk" onclick="mni('7')">7</button><button class="mnk" onclick="mni('8')">8</button><button class="mnk" onclick="mni('9')">9</button>
+      <button class="mnk" onclick="mni('4')">4</button><button class="mnk" onclick="mni('5')">5</button><button class="mnk" onclick="mni('6')">6</button>
+      <button class="mnk" onclick="mni('1')">1</button><button class="mnk" onclick="mni('2')">2</button><button class="mnk" onclick="mni('3')">3</button>
+      <button class="mnk s" onclick="mnd()">⌫</button><button class="mnk" onclick="mni('0')">0</button><button class="mnk s" onclick="mnc()">CLR</button>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn cancel" onclick="closeModal()">キャンセル</button>
+      <button class="mbtn ok" onclick="saveModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-tab">
+  <div class="btab active" id="bt-main" onclick="switchTab('main')">
+    <div class="btab-icon">🎰</div><span>入力</span>
+  </div>
+  <div class="btab" id="bt-calc" onclick="switchTab('calc')">
+    <div class="btab-icon">📈</div><span>計算</span>
+  </div>
+  <div class="btab" id="bt-result" onclick="switchTab('result')">
+    <div class="btab-icon">📊</div><span>結果</span>
+  </div>
+  <div class="btab" id="bt-menu" onclick="switchTab('menu')">
+    <div class="btab-icon">···</div><span>メニュー</span>
+  </div>
+</div>
+
+<script>
+var cfg = { kashi:250, koukan:330, kankin:3.03, prob:9.1, kph:220 };
+var rows = [];
+var lastKaiten = 0;
+var lastSnap = { replay:0, keisu:0, uwazara:0 };
+var phase = 'idle';
+var mochi = { replay:0, keisu:0, uwazara:0 };
+var fields = { replay:'', keisu:'', uwazara:'', kaiten:'', genkin:'', kakutoku:'' };
+var curF = 'replay';
+var initialReplay = 0; // 稼働開始時の再プレイ残り玉（投資計算用）
+
+var fLabels = {
+  replay:'再プレイ残り玉', keisu:'計数持ち玉', uwazara:'上皿余玉',
+  kaiten:'回転数', genkin:'現金投資（k）', kakutoku:'獲得玉数'
+};
+
+function el(id) { return document.getElementById(id); }
+function gn(n) { var v=fields[n]; if(v===''||v===null) return 0; var x=parseFloat(v); return isNaN(x)?0:x; }
+
+function nowTime() {
+  var d=new Date(), h=('0'+d.getHours()).slice(-2), m=('0'+d.getMinutes()).slice(-2);
+  return h+':'+m;
+}
+
+// ===== テンキー =====
+function foc(name) {
+  curF = name;
+  ['replay','keisu','uwazara'].forEach(function(f){ var e=el('mc-'+f); if(e) e.classList.remove('sel'); });
+  ['kaiten','genkin','kakutoku'].forEach(function(f){ var e=el('fs-'+f); if(e) e.classList.remove('sel'); });
+  if(el('mc-'+name)) el('mc-'+name).classList.add('sel');
+  if(el('fs-'+name)) el('fs-'+name).classList.add('sel');
+  el('dot-row').className = 'nrow dot-row' + (name==='genkin'?' show':'');
+  updDisp();
+}
+
+function ni(d) {
+  var cur = fields[curF];
+  if(d==='.' && cur.indexOf('.')!==-1) return;
+  if(d==='0.5'){ var n=parseFloat(cur)||0; fields[curF]=String(Math.round((n+0.5)*10)/10); }
+  else { if(cur.length>=7) return; fields[curF]=cur+d; }
+  syncM(); updDisp();
+}
+function nd() { fields[curF]=fields[curF].slice(0,-1); syncM(); updDisp(); }
+function nc() { fields[curF]=''; syncM(); updDisp(); }
+
+function syncM() {
+  if(curF==='replay'||curF==='keisu'||curF==='uwazara') mochi[curF]=gn(curF);
+}
+
+function updDisp() {
+  // 持ち玉
+  el('mv-replay').textContent = mochi.replay.toLocaleString();
+  el('mv-keisu').textContent = mochi.keisu.toLocaleString();
+  el('mv-uwazara').textContent = mochi.uwazara.toLocaleString();
+  el('mochiTotal').textContent = (mochi.replay+mochi.keisu+mochi.uwazara).toLocaleString();
+  // フィールド
+  ['kaiten','genkin','kakutoku'].forEach(function(n){
+    el('fv-'+n).textContent = fields[n]==='' ? '—' : fields[n];
+  });
+  calcResults();
+}
+
+// ===== SETTINGS =====
+function updateCfg() {
+  cfg.kashi = parseFloat(el('s-kashi').value)||250;
+  cfg.koukan = parseFloat(el('s-koukan').value)||330;
+  cfg.kankin = 1000/cfg.koukan; // 交換率から自動計算
+  cfg.prob = parseFloat(el('s-prob').value)||9.1;
+  cfg.kph = parseFloat(el('s-kph').value)||220;
+  el('sn-kashi').textContent = (1000/cfg.kashi).toFixed(2)+'円/玉';
+  el('sn-koukan').textContent = cfg.kankin.toFixed(2)+'円/玉';
+  calcResults();
+}
+
+// ===== ACTIONS =====
+function act(type) {
+  if(type==='start'&&phase==='atari'){ alert('当たり終を先に押してください'); return; }
+  if(type==='hatsu'&&phase==='atari'){ alert('当たり終を先に押してください'); return; }
+  if(type==='kadoend'&&phase==='atari'){ alert('当たり終を先に押してください'); return; }
+
+  var kaiten=gn('kaiten'), genkin=gn('genkin'), kakutoku=gn('kakutoku'), t=nowTime();
+
+  if(type==='start') {
+    // 最初のスタートだけ初期再プレイを記録
+    if(rows.length===0) initialReplay = mochi.replay;
+    pushRow('スタート',null,kaiten,null,mochi.keisu,null,null,t);
+    lastKaiten=kaiten; lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:mochi.uwazara};
+    fields.uwazara=''; mochi.uwazara=0; fields.kaiten=''; fields.genkin='';
+    phase='running';
+
+  } else if(type==='hatsu') {
+    var ransu=kaiten-lastKaiten;
+    var shohi=(lastSnap.replay+lastSnap.keisu+lastSnap.uwazara)-(mochi.replay+mochi.keisu+mochi.uwazara);
+    pushRow('初当たり',ransu,kaiten,shohi>0?shohi:0,mochi.keisu,genkin>0?genkin:null,null,t);
+    lastKaiten=kaiten; lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:mochi.uwazara};
+    fields.kaiten=''; fields.genkin='';
+    phase='atari';
+
+  } else if(type==='atariend') {
+    mochi.uwazara=gn('uwazara');
+    mochi.keisu=mochi.keisu+kakutoku+mochi.uwazara;
+    mochi.uwazara=0; fields.keisu=String(mochi.keisu); fields.uwazara='';
+    pushRow('当たり終',null,null,null,mochi.keisu,null,kakutoku>0?kakutoku:null,t);
+    fields.kakutoku=''; fields.kaiten=''; fields.genkin='';
+    lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:0};
+    phase='running';
+
+  } else if(type==='tamashometsu') {
+    mochi.keisu=0; mochi.uwazara=0; fields.keisu=''; fields.uwazara='';
+    pushRow('玉消滅',null,kaiten>0?kaiten:null,null,0,null,null,t);
+    fields.kaiten=''; lastSnap={replay:mochi.replay,keisu:0,uwazara:0};
+    phase='running';
+
+  } else if(type==='kadoend') {
+    var ransu2=kaiten-lastKaiten;
+    var shohi2=(lastSnap.replay+lastSnap.keisu+lastSnap.uwazara)-(mochi.replay+mochi.keisu+mochi.uwazara);
+    pushRow('稼働終了',ransu2,kaiten,shohi2>0?shohi2:0,mochi.keisu,genkin>0?genkin:null,null,t);
+    fields.kaiten=''; fields.genkin='';
+    phase='idle';
+  }
+
+  updDisp(); renderTable(); updBtns();
+}
+
+function updBtns() {
+  var locked = phase==='atari';
+  el('btn-start').style.opacity = locked?'0.3':'1';
+  el('btn-hatsu').style.opacity = locked?'0.3':'1';
+  el('btn-end').style.opacity = locked?'0.3':'1';
+  el('btn-atariend').style.opacity = (phase==='atari')?'1':'0.3';
+}
+
+var editIdx = -1; // 編集中の行インデックス（-1=新規）
+
+function startEditRow(idx) {
+  editIdx = idx;
+  var r = rows[idx];
+  // 各フィールドに値を読み込む
+  fields.kaiten = r.kaiten !== null ? String(r.kaiten) : '';
+  fields.genkin = r.genkin !== null ? String(r.genkin) : '';
+  fields.kakutoku = r.kakutoku !== null ? String(r.kakutoku) : '';
+  fields.keisu = r.keisu !== null ? String(r.keisu) : '';
+  // 持ち玉は計数持ち玉を読み込む
+  mochi.keisu = r.keisu !== null ? r.keisu : mochi.keisu;
+  // 保存ボタンを表示
+  el('btn-save').style.display = 'block';
+  el('btn-cancel-edit').style.display = 'block';
+  // ログの該当行をハイライト
+  var trs = el('tbody').querySelectorAll('tr');
+  for (var i = 0; i < trs.length; i++) trs[i].style.background = '';
+  if (trs[idx]) trs[idx].style.background = '#1a2a1a';
+  // 回転数にフォーカス
+  foc('kaiten');
+  updDisp();
+}
+
+function saveEditRow() {
+  if (editIdx < 0) return;
+  var r = rows[editIdx];
+  if (fields.kaiten !== '') r.kaiten = parseInt(fields.kaiten, 10);
+  if (fields.genkin !== '') r.genkin = parseFloat(fields.genkin);
+  if (fields.kakutoku !== '') r.kakutoku = parseInt(fields.kakutoku, 10);
+  if (fields.keisu !== '') r.keisu = parseInt(fields.keisu, 10);
+  // 編集モード終了
+  editIdx = -1;
+  el('btn-save').style.display = 'none';
+  el('btn-cancel-edit').style.display = 'none';
+  fields.kaiten=''; fields.genkin=''; fields.kakutoku='';
+  renderTable(); updDisp(); calcResults();
+}
+
+function cancelEdit() {
+  editIdx = -1;
+  el('btn-save').style.display = 'none';
+  el('btn-cancel-edit').style.display = 'none';
+  fields.kaiten=''; fields.genkin=''; fields.kakutoku='';
+  updDisp();
+  // ハイライト解除
+  var trs = el('tbody').querySelectorAll('tr');
+  for (var i = 0; i < trs.length; i++) trs[i].style.background = '';
+}
+
+function pushRow(op,ransu,kaiten,shohi,keisu,genkin,kakutoku,time) {
+  rows.push({op:op,ransu:ransu,kaiten:kaiten,shohi:shohi,keisu:keisu,genkin:genkin,kakutoku:kakutoku,time:time||nowTime()});
+}
+
+function undoLast() {
+  if(rows.length===0) return;
+  rows.pop();
+  if(rows.length===0) phase='idle';
+  else {
+    var last=rows[rows.length-1].op;
+    phase = last==='初当たり' ? 'atari' : (last==='稼働終了'?'idle':'running');
+  }
+  renderTable(); updBtns(); calcResults();
+}
+
+// ===== TABLE =====
+function tToMin(t) { if(!t) return null; var p=t.split(':'); return parseInt(p[0],10)*60+parseInt(p[1],10); }
+function tDiff(t1,t2) { var a=tToMin(t1),b=tToMin(t2); if(a===null||b===null) return null; var d=b-a; return d<0?d+1440:d; }
+
+function renderTable() {
+  var sR=0,sS=0,sG=0,sK=0, hR=false,hS=false,hK=false;
+  var i,r;
+  for(i=0;i<rows.length;i++){
+    r=rows[i];
+    if(r.ransu!==null){sR+=r.ransu;hR=true;}
+    if(r.shohi!==null){sS+=r.shohi;hS=true;}
+    if(r.genkin!==null) sG+=r.genkin;
+    if(r.kakutoku!==null){sK+=r.kakutoku;hK=true;}
+  }
+  var html='';
+  for(i=0;i<rows.length;i++){
+    r=rows[i];
+    var elapsed='/';
+    if(i>0&&rows[i-1].time&&r.time){ var d=tDiff(rows[i-1].time,r.time); if(d!==null) elapsed=d+'分'; }
+    html+='<tr onclick="startEditRow('+i+')" style="cursor:pointer;">'+
+      '<td class="op">'+r.op+'</td>'+
+      '<td class="t" onclick="event.stopPropagation();editTime('+i+')">'+( r.time||'—')+'</td>'+
+      '<td class="n">'+elapsed+'</td>'+
+      '<td class="n">'+(r.ransu!==null?r.ransu:'/')+'</td>'+
+      '<td class="n">'+(r.kaiten!==null?r.kaiten:'/')+'</td>'+
+      '<td class="n">'+(r.shohi!==null?r.shohi:'/')+'</td>'+
+      '<td class="n">'+(r.keisu!==null?r.keisu.toLocaleString():'/')+'</td>'+
+      '<td class="n">'+(r.genkin!==null?r.genkin+'k':'/')+'</td>'+
+      '<td class="n">'+(r.kakutoku!==null?r.kakutoku.toLocaleString():'/')+'</td>'+
+      '</tr>';
+  }
+  if(rows.length>0){
+    var tt='/';
+    if(rows[0].time&&rows[rows.length-1].time){ var td2=tDiff(rows[0].time,rows[rows.length-1].time); if(td2!==null) tt=td2+'分'; }
+    html+='<tr class="total">'+
+      '<td>計</td><td>'+tt+'</td><td>/</td>'+
+      '<td>'+(hR?sR:'/')+'</td><td>/</td>'+
+      '<td>'+(hS?sS:'/')+'</td><td>/</td>'+
+      '<td class="red">'+(sG>0?sG+'k':'/')+'</td>'+
+      '<td>'+(hK?sK.toLocaleString():'/')+'</td>'+
+      '</tr>';
+  }
+  el('tbody').innerHTML=html;
+  calcResults();
+}
+
+// ===== COPY LOG =====
+function copyLog() {
+  if(rows.length===0){ alert('データがありません'); return; }
+  var txt='操作\t時刻\t経過\t乱数\t回転\t消費\t計数\t現金\t獲得\n';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var elapsed='';
+    if(i>0&&rows[i-1].time&&r.time){ var d=tDiff(rows[i-1].time,r.time); if(d!==null) elapsed=d+'分'; }
+    txt+=r.op+'\t'+(r.time||'')+'\t'+elapsed+'\t'+
+      (r.ransu!==null?r.ransu:'')+'\t'+(r.kaiten!==null?r.kaiten:'')+'\t'+
+      (r.shohi!==null?r.shohi:'')+'\t'+(r.keisu!==null?r.keisu:'')+'\t'+
+      (r.genkin!==null?r.genkin+'k':'')+'\t'+(r.kakutoku!==null?r.kakutoku:'')+'\n';
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ alert('コピーしました！'); }).catch(function(){ fallbackCopy(txt); });
+  } else { fallbackCopy(txt); }
+}
+function fallbackCopy(txt) {
+  var ta=document.createElement('textarea');
+  ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); alert('コピーしました！'); } catch(e){ alert('コピーできませんでした'); }
+  document.body.removeChild(ta);
+}
+
+// ===== CALC =====
+function calcResults() {
+  var sS=0,sK=0,sKa=0,aC=0,i,r;
+  for(i=0;i<rows.length;i++){
+    r=rows[i];
+    if(r.shohi!==null) sS+=r.shohi;
+    if(r.ransu!==null) sK+=r.ransu;
+    if(r.kakutoku!==null){sKa+=r.kakutoku;aC++;}
+  }
+  el('r-sokaiten').innerHTML=sK>0?sK.toLocaleString()+'<span class="u">回</span>':'—<span class="u">回</span>';
+  el('r-soshohi').innerHTML=sS>0?sS.toLocaleString()+'<span class="u">個</span>':'—<span class="u">個</span>';
+  if(aC===0||sS===0){
+    ['r-1k','r-border','r-jikyu','r-kitai','r-rb'].forEach(function(id){ el(id).innerHTML='—'; });
+    return;
+  }
+  var kt=1000/cfg.koukan;
+  var k1k=sK/(sS/cfg.kashi);
+  var rb=sKa/aC;
+  var border=cfg.kashi*(1000/(rb*kt));
+  var jikyu=cfg.kph>0?(k1k-border)*(cfg.kph/cfg.kashi)*kt:0;
+  var kitai=(k1k-border)/cfg.kashi*sS*kt;
+  setRv('r-1k',k1k.toFixed(2),'回転',null,'acc');
+  setRv('r-border',border.toFixed(2),'回転',null,'');
+  setRv('r-jikyu',Math.round(jikyu).toLocaleString(),'円/h',jikyu,'');
+  setRv('r-kitai',Math.round(kitai).toLocaleString(),'円',kitai,'');
+  setRv('r-rb',Math.round(rb).toLocaleString(),'玉',null,'');
+}
+function setRv(id,val,unit,num,fc){
+  var cls=fc; if(!cls&&num!==null) cls=num>=0?'pos':'neg';
+  var e=el(id); e.className='rv'+(cls?' '+cls:'');
+  e.innerHTML=val+'<span class="u">'+unit+'</span>';
+}
+
+function renderResult() {
+  if(rows.length===0){el('resultDiv').innerHTML='<div class="empty">稼働終了後に結果が表示されます</div>';return;}
+
+  var sS=0,sK=0,sKa=0,sG=0,aC=0,i,r;
+  var finalReplay=mochi.replay; // 現在の再プレイ残り
+  for(i=0;i<rows.length;i++){
+    r=rows[i];
+    if(r.shohi!==null) sS+=r.shohi;
+    if(r.ransu!==null) sK+=r.ransu;
+    if(r.kakutoku!==null){sKa+=r.kakutoku;aC++;}
+    if(r.genkin!==null) sG+=r.genkin;
+  }
+
+  // 稼働時間
+  var totalTime='—';
+  if(rows[0].time&&rows[rows.length-1].time){
+    var td=tDiff(rows[0].time,rows[rows.length-1].time);
+    if(td!==null){
+      // 通常時間 = 初当たり行の経過時間合計
+      var tsNormal=0, tsAtari=0;
+      for(i=1;i<rows.length;i++){
+        var d2=tDiff(rows[i-1].time,rows[i].time);
+        if(d2===null) continue;
+        if(rows[i].op==='初当たり'||rows[i].op==='稼働終了') tsNormal+=d2;
+        else if(rows[i].op==='当たり終') tsAtari+=d2;
+      }
+      totalTime=td+'分（通常'+tsNormal+'分／当たり中'+tsAtari+'分）';
+    }
+  }
+
+  // 投資計算
+  var replayUsed = initialReplay - finalReplay; // 使用した再プレイ玉数
+  if(replayUsed < 0) replayUsed = 0;
+  var replayYen = Math.round(replayUsed * cfg.kankin);  // 再プレイ使用額
+  var genkinYen = sG * 1000;                             // 現金投資額
+  var totalToushi = replayYen + genkinYen;               // 合計投資額
+
+  // 収支
+  var finalMochi = mochi.keisu + mochi.uwazara; // 最終的に手元に残る計数玉＋余玉
+  var kakutokuYen = Math.round((sKa + finalMochi) * cfg.kankin); // 獲得玉＋残り持ち玉の換金額
+  var shushi = kakutokuYen - totalToushi;
+
+  // 表示用
+  var finalTama = sKa + finalMochi;
+
+  // 計算系
+  var kt=1000/cfg.koukan;
+  var k1k=sS>0?sK/(sS/cfg.kashi):0;
+  var rb=aC>0?sKa/aC:0;
+  var border=rb>0?cfg.kashi*(1000/(rb*kt)):0;
+
+  function rrow(l,v,c){
+    return '<div class="rrow"><span class="rl">'+l+'</span><span class="rv '+(c||'')+'">'+v+'</span></div>';
+  }
+  function cell(l,v,u,c){
+    return '<div class="rcell"><div class="rcl">'+l+'</div><div class="rcv '+(c||'')+'">'+v+'<span class="rcu">'+u+'</span></div></div>';
+  }
+
+  el('resultDiv').innerHTML=
+    // 収支大表示
+    '<div class="rbig"><div class="rbl">収支</div>'+
+    '<div class="rbv '+(shushi>=0?'pos':'neg')+'">'+(shushi>=0?'+':'')+shushi.toLocaleString()+'円</div></div>'+
+    // 稼働サマリー
+    rrow('総回転数 / 初当たり',sK.toLocaleString()+'回 ／ '+aC+'回')+
+    rrow('総稼働時間',totalTime)+
+    // 投資
+    rrow('現金投資',genkinYen.toLocaleString()+'円（'+sG+'k）','neg')+
+    rrow('再プレイ使用',replayYen.toLocaleString()+'円（'+replayUsed.toLocaleString()+'玉）','neg')+
+    rrow('合計投資',totalToushi.toLocaleString()+'円','neg')+
+    // 獲得
+    rrow('最終手持ち玉数',finalTama.toLocaleString()+'玉（獲得'+sKa.toLocaleString()+'＋残り'+finalMochi.toLocaleString()+'）')+
+    rrow('換金額',kakutokuYen.toLocaleString()+'円','pos')+
+    // 詳細グリッド
+    '<div class="rgrid">'+
+    cell('1kスタート',k1k.toFixed(2),'回転','')+
+    cell('ボーダー',border.toFixed(2),'回転','')+
+    cell('RB',Math.round(rb).toLocaleString(),'玉','')+
+    cell('換金率',cfg.kankin,'円/玉','')+
+    '</div>';
+}
+
+// ===== 時刻モーダル =====
+var mIdx=-1, mH='00', mM='00', mFoc='h';
+function editTime(idx){
+  mIdx=idx; var t=rows[idx].time||nowTime(); var p=t.split(':');
+  mH=p[0]||'00'; mM=p[1]||'00'; mFoc='h';
+  updModal(); el('timeModal').classList.add('on');
+}
+function mfoc(part){
+  mFoc=part;
+  el('mtab-h').style.background=part==='h'?'var(--accent)':'#3a3a3c';
+  el('mtab-h').style.color=part==='h'?'#000':'#fff';
+  el('mtab-m').style.background=part==='m'?'var(--accent)':'#3a3a3c';
+  el('mtab-m').style.color=part==='m'?'#000':'#fff';
+  el('mtp-h').className='mtp'+(part==='h'?' on':'');
+  el('mtp-m').className='mtp'+(part==='m'?' on':'');
+}
+function mni(d){
+  if(mFoc==='h'){ var v=(mH+d).slice(-2); if(parseInt(v,10)>23) v='0'+d; mH=('0'+parseInt(v,10)).slice(-2); }
+  else { var v2=(mM+d).slice(-2); if(parseInt(v2,10)>59) v2='0'+d; mM=('0'+parseInt(v2,10)).slice(-2); }
+  updModal();
+}
+function mnd(){ if(mFoc==='h') mH='00'; else mM='00'; updModal(); }
+function mnc(){ if(mFoc==='h') mH='00'; else mM='00'; updModal(); }
+function updModal(){ el('mtp-h').textContent=mH; el('mtp-m').textContent=mM; }
+function closeModal(){ el('timeModal').classList.remove('on'); }
+function saveModal(){
+  if(mIdx>=0&&mIdx<rows.length){ rows[mIdx].time=mH+':'+mM; renderTable(); }
+  closeModal();
+}
+
+// ===== NAV =====
+function showSub(name){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  el('screen-'+name).classList.add('active');
+  document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tnav').forEach(function(n){n.classList.remove('active','white');});
+  if(name==='settings') el('tn-settings').classList.add('active');
+}
+function switchTab(name){
+  if(name==='menu'){
+    if(confirm('データをリセットしますか？')){
+      rows=[];lastKaiten=0;lastSnap={replay:0,keisu:0,uwazara:0};phase='idle';initialReplay=0;
+      mochi={replay:0,keisu:0,uwazara:0};
+      fields={replay:'',keisu:'',uwazara:'',kaiten:'',genkin:'',kakutoku:''};
+      updDisp();renderTable();updBtns();
+    }
+    return;
+  }
+  document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});
+  el('bt-'+name).classList.add('active');
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.tnav').forEach(function(n){n.classList.remove('active','white');});
+  if(name==='result'){renderResult();el('screen-result').classList.add('active');}
+  else if(name==='calc'){el('screen-calc').classList.add('active');el('tn-calc').classList.add('active');}
+  else{el('screen-main').classList.add('active');el('tn-main').classList.add('white');}
+}
+
+updateCfg();
+foc('replay');
+updBtns();
+switchTab('main');
+</script>
+
+</body>
+</html>
