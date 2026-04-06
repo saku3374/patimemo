@@ -277,7 +277,7 @@ font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
       <table class="log-table">
         <thead><tr>
           <th>操作</th><th>時刻</th><th>経過</th><th>乱数</th><th>回転</th>
-          <th>消費</th><th>計数</th><th>現金</th><th>獲得</th>
+          <th>消費</th><th>再プレイ</th><th>計数</th><th>現金</th><th>獲得</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -431,6 +431,33 @@ font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
   </div>
 </div>
 
+<!-- ===== メニュー画面 ===== -->
+
+<div class="screen" id="screen-menu">
+  <div style="overflow-y:auto;flex:1;">
+    <div class="stitle">セーブスロット</div>
+    <div class="slot-list"></div>
+    <div style="padding:16px;border-top:1px solid var(--border);margin-top:8px;">
+      <button onclick="resetCurrent()" style="width:100%;padding:14px;border-radius:10px;border:none;background:#c0392b;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">現在のデータをリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- スロット名入力モーダル -->
+
+<div class="modal-ov" id="slotNameModal">
+  <div class="modal-box">
+    <div class="modal-title">スロット名を入力</div>
+    <input id="slotNameInput" type="text"
+      style="width:100%;background:#2a2a2e;border:1px solid var(--border);border-radius:10px;color:#fff;font-size:16px;padding:12px;outline:none;font-family:inherit;margin-bottom:14px;"
+      placeholder="例：北斗 10/5 夜">
+    <div class="modal-btns">
+      <button class="mbtn cancel" onclick="closeSlotNameModal()">キャンセル</button>
+      <button class="mbtn ok" onclick="confirmSaveSlot()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 時刻モーダル ===== -->
 
 <div class="modal-ov" id="timeModal">
@@ -556,17 +583,17 @@ function act(type) {
   var kaiten=gn('kaiten'), genkin=gn('genkin'), kakutoku=gn('kakutoku'), t=nowTime();
 
   if(type==='start') {
-    // 最初のスタートだけ初期再プレイを記録
     if(rows.length===0) initialReplay = mochi.replay;
-    pushRow('スタート',null,kaiten,null,mochi.keisu,null,null,t);
-    lastKaiten=kaiten; lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:mochi.uwazara};
     fields.uwazara=''; mochi.uwazara=0; fields.kaiten=''; fields.genkin='';
+    pushRow('スタート',null,kaiten,null,mochi.replay,mochi.keisu,null,null,t);
+    lastKaiten=kaiten;
+    lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:0};
     phase='running';
 
   } else if(type==='hatsu') {
     var ransu=kaiten-lastKaiten;
     var shohi=(lastSnap.replay+lastSnap.keisu+lastSnap.uwazara)-(mochi.replay+mochi.keisu+mochi.uwazara);
-    pushRow('初当たり',ransu,kaiten,shohi>0?shohi:0,mochi.keisu,genkin>0?genkin:null,null,t);
+    pushRow('初当たり',ransu,kaiten,shohi>0?shohi:0,mochi.replay,mochi.keisu,genkin>0?genkin:null,null,t);
     lastKaiten=kaiten; lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:mochi.uwazara};
     fields.kaiten=''; fields.genkin='';
     phase='atari';
@@ -575,21 +602,22 @@ function act(type) {
     mochi.uwazara=gn('uwazara');
     mochi.keisu=mochi.keisu+kakutoku+mochi.uwazara;
     mochi.uwazara=0; fields.keisu=String(mochi.keisu); fields.uwazara='';
-    pushRow('当たり終',null,null,null,mochi.keisu,null,kakutoku>0?kakutoku:null,t);
+    pushRow('当たり終',null,null,null,mochi.replay,mochi.keisu,null,kakutoku>0?kakutoku:null,t);
     fields.kakutoku=''; fields.kaiten=''; fields.genkin='';
     lastSnap={replay:mochi.replay,keisu:mochi.keisu,uwazara:0};
     phase='running';
 
   } else if(type==='tamashometsu') {
+    var shohi3=(lastSnap.replay+lastSnap.keisu+lastSnap.uwazara)-(mochi.replay+mochi.keisu+mochi.uwazara);
     mochi.keisu=0; mochi.uwazara=0; fields.keisu=''; fields.uwazara='';
-    pushRow('玉消滅',null,kaiten>0?kaiten:null,null,0,null,null,t);
+    pushRow('玉消滅',null,kaiten>0?kaiten:null,shohi3>0?shohi3:0,mochi.replay,0,null,null,t);
     fields.kaiten=''; lastSnap={replay:mochi.replay,keisu:0,uwazara:0};
     phase='running';
 
   } else if(type==='kadoend') {
     var ransu2=kaiten-lastKaiten;
     var shohi2=(lastSnap.replay+lastSnap.keisu+lastSnap.uwazara)-(mochi.replay+mochi.keisu+mochi.uwazara);
-    pushRow('稼働終了',ransu2,kaiten,shohi2>0?shohi2:0,mochi.keisu,genkin>0?genkin:null,null,t);
+    pushRow('稼働終了',ransu2,kaiten,shohi2>0?shohi2:0,mochi.replay,mochi.keisu,genkin>0?genkin:null,null,t);
     fields.kaiten=''; fields.genkin='';
     phase='idle';
   }
@@ -655,8 +683,8 @@ function cancelEdit() {
   for (var i = 0; i < trs.length; i++) trs[i].style.background = '';
 }
 
-function pushRow(op,ransu,kaiten,shohi,keisu,genkin,kakutoku,time) {
-  rows.push({op:op,ransu:ransu,kaiten:kaiten,shohi:shohi,keisu:keisu,genkin:genkin,kakutoku:kakutoku,time:time||nowTime()});
+function pushRow(op,ransu,kaiten,shohi,replay,keisu,genkin,kakutoku,time) {
+  rows.push({op:op,ransu:ransu,kaiten:kaiten,shohi:shohi,replay:replay,keisu:keisu,genkin:genkin,kakutoku:kakutoku,time:time||nowTime()});
 }
 
 function undoLast() {
@@ -696,6 +724,7 @@ function renderTable() {
       '<td class="n">'+(r.ransu!==null?r.ransu:'/')+'</td>'+
       '<td class="n">'+(r.kaiten!==null?r.kaiten:'/')+'</td>'+
       '<td class="n">'+(r.shohi!==null?r.shohi:'/')+'</td>'+
+      '<td class="n">'+(r.replay!==null?r.replay.toLocaleString():'/')+'</td>'+
       '<td class="n">'+(r.keisu!==null?r.keisu.toLocaleString():'/')+'</td>'+
       '<td class="n">'+(r.genkin!==null?r.genkin+'k':'/')+'</td>'+
       '<td class="n">'+(r.kakutoku!==null?r.kakutoku.toLocaleString():'/')+'</td>'+
@@ -707,7 +736,7 @@ function renderTable() {
     html+='<tr class="total">'+
       '<td>計</td><td>'+tt+'</td><td>/</td>'+
       '<td>'+(hR?sR:'/')+'</td><td>/</td>'+
-      '<td>'+(hS?sS:'/')+'</td><td>/</td>'+
+      '<td>'+(hS?sS:'/')+'</td><td>/</td><td>/</td>'+
       '<td class="red">'+(sG>0?sG+'k':'/')+'</td>'+
       '<td>'+(hK?sK.toLocaleString():'/')+'</td>'+
       '</tr>';
@@ -719,14 +748,15 @@ function renderTable() {
 // ===== COPY LOG =====
 function copyLog() {
   if(rows.length===0){ alert('データがありません'); return; }
-  var txt='操作\t時刻\t経過\t乱数\t回転\t消費\t計数\t現金\t獲得\n';
+  var txt='操作\t時刻\t経過\t乱数\t回転\t消費\t再プレイ\t計数\t現金\t獲得\n';
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
     var elapsed='';
     if(i>0&&rows[i-1].time&&r.time){ var d=tDiff(rows[i-1].time,r.time); if(d!==null) elapsed=d+'分'; }
     txt+=r.op+'\t'+(r.time||'')+'\t'+elapsed+'\t'+
       (r.ransu!==null?r.ransu:'')+'\t'+(r.kaiten!==null?r.kaiten:'')+'\t'+
-      (r.shohi!==null?r.shohi:'')+'\t'+(r.keisu!==null?r.keisu:'')+'\t'+
+      (r.shohi!==null?r.shohi:'')+'\t'+(r.replay!==null?r.replay:'')+'\t'+
+      (r.keisu!==null?r.keisu:'')+'\t'+
       (r.genkin!==null?r.genkin+'k':'')+'\t'+(r.kakutoku!==null?r.kakutoku:'')+'\n';
   }
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -885,6 +915,145 @@ function saveModal(){
   closeModal();
 }
 
+// ===== 自動保存・復元 =====
+function autoSave() {
+  try {
+    var state = {
+      rows: rows,
+      mochi: mochi,
+      lastKaiten: lastKaiten,
+      lastSnap: lastSnap,
+      phase: phase,
+      initialReplay: initialReplay,
+      fields: fields
+    };
+    localStorage.setItem('pachimemo_auto', JSON.stringify(state));
+  } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    var s = localStorage.getItem('pachimemo_auto');
+    if (!s) return;
+    var state = JSON.parse(s);
+    rows = state.rows || [];
+    mochi = state.mochi || {replay:0,keisu:0,uwazara:0};
+    lastKaiten = state.lastKaiten || 0;
+    lastSnap = state.lastSnap || {replay:0,keisu:0,uwazara:0};
+    phase = state.phase || 'idle';
+    initialReplay = state.initialReplay || 0;
+    fields = state.fields || {replay:'',keisu:'',uwazara:'',kaiten:'',genkin:'',kakutoku:''};
+    // mochiをfieldsと同期
+    mochi.replay = fields.replay ? parseInt(fields.replay,10)||0 : mochi.replay;
+    mochi.keisu = fields.keisu ? parseInt(fields.keisu,10)||0 : mochi.keisu;
+    mochi.uwazara = fields.uwazara ? parseInt(fields.uwazara,10)||0 : mochi.uwazara;
+  } catch(e) {}
+}
+
+// ===== セーブスロット =====
+var SLOT_COUNT = 5;
+
+function getSlots() {
+  try { return JSON.parse(localStorage.getItem('pachimemo_slots')||'{}'); } catch(e){ return {}; }
+}
+function setSlots(slots) {
+  try { localStorage.setItem('pachimemo_slots', JSON.stringify(slots)); } catch(e) {}
+}
+
+function saveToSlot(idx) {
+  var defaultName = rows.length > 0 ? (rows[0].time||'')+'〜'+(rows[rows.length-1].time||'') : '空';
+  // 名前入力モーダルを表示
+  el('slotNameInput').value = defaultName;
+  el('slotNameModal').classList.add('on');
+  el('slotNameModal').dataset.idx = idx;
+}
+
+function confirmSaveSlot() {
+  var idx = parseInt(el('slotNameModal').dataset.idx, 10);
+  var name = el('slotNameInput').value || '無題';
+  var slots = getSlots();
+  slots[idx] = {
+    name: name,
+    savedAt: nowTime(),
+    rows: rows,
+    mochi: mochi,
+    lastKaiten: lastKaiten,
+    lastSnap: lastSnap,
+    phase: phase,
+    initialReplay: initialReplay,
+    fields: fields
+  };
+  setSlots(slots);
+  closeSlotNameModal();
+  renderSlots();
+}
+
+function closeSlotNameModal() {
+  el('slotNameModal').classList.remove('on');
+}
+
+function loadFromSlot(idx) {
+  var slots = getSlots();
+  var s = slots[idx];
+  if (!s) return;
+  rows = s.rows || [];
+  mochi = s.mochi || {replay:0,keisu:0,uwazara:0};
+  lastKaiten = s.lastKaiten || 0;
+  lastSnap = s.lastSnap || {replay:0,keisu:0,uwazara:0};
+  phase = s.phase || 'idle';
+  initialReplay = s.initialReplay || 0;
+  fields = s.fields || {replay:'',keisu:'',uwazara:'',kaiten:'',genkin:'',kakutoku:''};
+  autoSave();
+  updDisp(); renderTable(); updBtns();
+  switchTab('main');
+}
+
+function deleteSlot(idx) {
+  var slots = getSlots();
+  delete slots[idx];
+  setSlots(slots);
+  renderSlots();
+}
+
+function resetCurrent() {
+  rows=[];lastKaiten=0;lastSnap={replay:0,keisu:0,uwazara:0};phase='idle';initialReplay=0;
+  mochi={replay:0,keisu:0,uwazara:0};
+  fields={replay:'',keisu:'',uwazara:'',kaiten:'',genkin:'',kakutoku:''};
+  autoSave();
+  updDisp();renderTable();updBtns();
+}
+
+function renderSlots() {
+  var slots = getSlots();
+  var html = '';
+  for (var i = 0; i < SLOT_COUNT; i++) {
+    var s = slots[i];
+    if (s) {
+      html +=
+        '<div style="padding:12px 14px;border-bottom:1px solid #1a1a1a;background:#080808;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+        '<span style="font-size:13px;color:#fff;font-weight:700;">スロット'+(i+1)+'</span>'+
+        '<span style="font-size:11px;color:var(--muted);">'+s.name+'</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;">'+
+        '<button onclick="loadFromSlot('+i+')" style="flex:2;padding:9px;border-radius:8px;border:none;background:var(--accent);color:#000;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">読み込み</button>'+
+        '<button onclick="saveToSlot('+i+')" style="flex:2;padding:9px;border-radius:8px;border:none;background:#3a3a3c;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">上書き保存</button>'+
+        '<button onclick="deleteSlot('+i+')" style="flex:1;padding:9px;border-radius:8px;border:none;background:#c0392b;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">削除</button>'+
+        '</div></div>';
+    } else {
+      html +=
+        '<div style="padding:12px 14px;border-bottom:1px solid #1a1a1a;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+        '<span style="font-size:13px;color:var(--muted);">スロット'+(i+1)+'（空）</span>'+
+        '</div>'+
+        '<button onclick="saveToSlot('+i+')" style="width:100%;padding:9px;border-radius:8px;border:none;background:#1e1e1e;color:#888;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">現在のデータを保存</button>'+
+        '</div>';
+    }
+  }
+  var menuEl = el('screen-menu');
+  if (menuEl) menuEl.querySelector('.slot-list').innerHTML = html;
+}
+
 // ===== NAV =====
 function showSub(name){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
@@ -895,12 +1064,12 @@ function showSub(name){
 }
 function switchTab(name){
   if(name==='menu'){
-    if(confirm('データをリセットしますか？')){
-      rows=[];lastKaiten=0;lastSnap={replay:0,keisu:0,uwazara:0};phase='idle';initialReplay=0;
-      mochi={replay:0,keisu:0,uwazara:0};
-      fields={replay:'',keisu:'',uwazara:'',kaiten:'',genkin:'',kakutoku:''};
-      updDisp();renderTable();updBtns();
-    }
+    document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});
+    el('bt-menu').classList.add('active');
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+    document.querySelectorAll('.tnav').forEach(function(n){n.classList.remove('active','white');});
+    el('screen-menu').classList.add('active');
+    renderSlots();
     return;
   }
   document.querySelectorAll('.btab').forEach(function(b){b.classList.remove('active');});
@@ -912,10 +1081,16 @@ function switchTab(name){
   else{el('screen-main').classList.add('active');el('tn-main').classList.add('white');}
 }
 
+// 自動保存をact・undoLast・saveEditRowにフック
+var _origRenderTable = renderTable;
+renderTable = function() { _origRenderTable(); autoSave(); };
+
+autoLoad();
 updateCfg();
 foc('replay');
 updBtns();
 switchTab('main');
+renderTable();
 </script>
 
 </body>
