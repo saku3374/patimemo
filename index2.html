@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>PachiLog_Lite</title>
+</head>
+<body style="margin:0;padding:0;background:#1a1a1a;color:#fff;font-family:sans-serif;font-size:14px;">
+
+<div id="app">
+  <div style="padding:10px;background:#333;display:flex;justify-content:space-between;">
+    <input id="unit" type="text" placeholder="台番/機種" style="width:60%;background:#000;color:#00ff00;border:1px solid #666;padding:5px;">
+    <button onclick="saveSlot(1)" style="background:#555;color:#fff;padding:5px 10px;">Slot1</button>
+  </div>
+
+  <div style="display:flex;">
+    <div style="width:40%;padding:10px;display:flex;flex-direction:column;gap:10px;">
+      <button onclick="addWrap()" style="height:80px;background:#c0392b;color:#fff;font-weight:bold;border:none;border-radius:5px;">250玉<br>ラップ</button>
+      <button onclick="eventHit()" style="height:60px;background:#f39c12;color:#fff;font-weight:bold;border:none;border-radius:5px;">当たり</button>
+      <button onclick="eventEnd()" style="height:60px;background:#2980b9;color:#fff;font-weight:bold;border:none;border-radius:5px;">連チャン終了</button>
+    </div>
+
+    <div style="width:60%;padding:10px;">
+      <div id="display" style="background:#000;padding:10px;text-align:right;font-size:24px;color:#00ff00;border:1px solid #444;margin-bottom:10px;height:30px;">0</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+        <button onclick="num(7)" style="height:45px;background:#444;color:#fff;border:none;">7</button>
+        <button onclick="num(8)" style="height:45px;background:#444;color:#fff;border:none;">8</button>
+        <button onclick="num(9)" style="height:45px;background:#444;color:#fff;border:none;">9</button>
+        <button onclick="num(4)" style="height:45px;background:#444;color:#fff;border:none;">4</button>
+        <button onclick="num(5)" style="height:45px;background:#444;color:#fff;border:none;">5</button>
+        <button onclick="num(6)" style="height:45px;background:#444;color:#fff;border:none;">6</button>
+        <button onclick="num(1)" style="height:45px;background:#444;color:#fff;border:none;">1</button>
+        <button onclick="num(2)" style="height:45px;background:#444;color:#fff;border:none;">2</button>
+        <button onclick="num(3)" style="height:45px;background:#444;color:#fff;border:none;">3</button>
+        <button onclick="clr()" style="height:45px;background:#888;color:#fff;border:none;">C</button>
+        <button onclick="num(0)" style="height:45px;background:#444;color:#fff;border:none;">0</button>
+        <button onclick="setVal()" style="height:45px;background:#27ae60;color:#fff;border:none;">Set</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:10px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+      <span>ログ（長押しでコピー用）</span>
+      <button onclick="copyLog()" style="background:#444;color:#fff;border:none;padding:5px;">コピー</button>
+    </div>
+    <div id="logArea" style="background:#000;height:200px;overflow-y:auto;font-family:monospace;font-size:12px;padding:5px;border:1px solid #444;">
+    </div>
+  </div>
+</div>
+
+<script>
+var currentVal = "0";
+var wraps = [];
+var startRot = 0;
+var totalInvestment = 0;
+
+function num(n) {
+  if (currentVal === "0") currentVal = "" + n;
+  else currentVal += "" + n;
+  document.getElementById("display").innerText = currentVal;
+}
+
+function clr() {
+  currentVal = "0";
+  document.getElementById("display").innerText = currentVal;
+}
+
+function getTime() {
+  var d = new Date();
+  return d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2);
+}
+
+function addLog(txt) {
+  var div = document.createElement("div");
+  div.innerText = "[" + getTime() + "] " + txt;
+  var area = document.getElementById("logArea");
+  area.insertBefore(div, area.firstChild);
+}
+
+function setVal() {
+  startRot = parseInt(currentVal);
+  addLog("開始/再開回転数セット: " + startRot);
+  clr();
+}
+
+function addWrap() {
+  totalInvestment += 250;
+  var rot = parseInt(currentVal);
+  var diff = (wraps.length === 0) ? (rot - startRot) : (rot - wraps[wraps.length-1]);
+  wraps.push(rot);
+  addLog("250玉投入(" + totalInvestment + "): " + rot + "回 (+" + diff + ")");
+}
+
+function eventHit() {
+  addLog("★当たり! 回転数: " + currentVal);
+  clr();
+}
+
+function eventEnd() {
+  addLog("◎連チャン終了 獲得玉数: " + currentVal);
+  clr();
+}
+
+function copyLog() {
+  var text = document.getElementById("logArea").innerText;
+  var el = document.createElement("textarea");
+  el.value = text;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand("copy");
+  document.body.removeChild(el);
+  alert("コピーしました");
+}
+</script>
+</body>
+</html>
