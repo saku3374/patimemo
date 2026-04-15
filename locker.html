@@ -181,17 +181,35 @@ var items = [
   { id: "pants",  name: "パンツ", count: 2, target: 2 }
 ];
 
+function save() {
+  var data = {};
+  for (var i = 0; i < items.length; i++) {
+    data[items[i].id] = { count: items[i].count, target: items[i].target };
+  }
+  localStorage.setItem('locker', JSON.stringify(data));
+}
+function load() {
+  var raw = localStorage.getItem('locker');
+  if (!raw) return;
+  var data = JSON.parse(raw);
+  for (var i = 0; i < items.length; i++) {
+    if (data[items[i].id]) {
+      items[i].count  = data[items[i].id].count;
+      items[i].target = data[items[i].id].target;
+    }
+  }
+}
 function changeCount(id, d) {
   for (var i = 0; i < items.length; i++) {
     if (items[i].id === id) { items[i].count = Math.max(0, items[i].count + d); }
   }
-  render();
+  save(); render();
 }
 function changeTarget(id, d) {
   for (var i = 0; i < items.length; i++) {
     if (items[i].id === id) { items[i].target = Math.max(1, items[i].target + d); }
   }
-  render();
+  save(); render();
 }
 function needClass(n) {
   return n === 0 ? 'need-zero' : n === 1 ? 'need-some' : 'need-many';
@@ -201,12 +219,8 @@ function render() {
   var html = '';
   var lines = [];
 
-  var sorted = items.slice().sort(function(a, b) {
-    return Math.max(0, b.target - b.count) - Math.max(0, a.target - a.count);
-  });
-
-  for (var i = 0; i < sorted.length; i++) {
-    var it = sorted[i];
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
     var need = Math.max(0, it.target - it.count);
     if (need > 0) lines.push(it.name + need + '枚');
 
@@ -235,7 +249,7 @@ function render() {
     : '<div class="summary-line">' + lines.map(function(l){ return '<span>' + l + '</span>'; }).join('') + '</div>';
   document.getElementById('summary').innerHTML = s;
 }
-render();
+load(); render();
 </script>
 
 </body>
