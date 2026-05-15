@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>貯玉管理</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", sans-serif; -webkit-text-size-adjust: 100%; }
+body { background: #f3f4f6; color: #111827; font-size: 16px; }
+input, button { font-family: inherit; }
+
+.top {
+position: sticky; top: 0; z-index: 100;
+background: linear-gradient(135deg, #0891b2, #1e40af);
+color: white; padding: 8px 12px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.top .lbl { font-size: 10px; opacity: 0.85; }
+.top .v { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.top .s { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+.add-top {
+background: rgba(255,255,255,0.22);
+border: 1px solid rgba(255,255,255,0.3);
+color: white; padding: 8px 14px;
+border-radius: 7px; font-size: 13px; font-weight: 600;
+}
+
+.wrap {
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+background: white;
+position: relative;
+}
+.tbl {
+border-collapse: collapse;
+font-size: 13px;
+}
+.tbl thead th {
+position: sticky; top: 0;
+background: #e5e7eb;
+color: #4b5563;
+font-size: 10px;
+font-weight: 700;
+padding: 6px 6px;
+text-align: left;
+white-space: nowrap;
+border-bottom: 1px solid #d1d5db;
+z-index: 5;
+}
+.tbl tbody td {
+padding: 0;
+background: white;
+border-bottom: 1px solid #f3f4f6;
+vertical-align: middle;
+}
+.tbl tbody td input {
+border: none;
+background: transparent;
+width: 100%;
+padding: 6px 6px;
+font-size: 16px;
+font-family: inherit;
+outline: none;
+display: block;
+min-height: 36px;
+}
+.tbl tbody td input:focus { background: #fef9c3; }
+
+.c-name {
+position: sticky; left: 0;
+z-index: 3;
+min-width: 84px;
+border-right: 1px solid #e5e7eb;
+}
+.c-name input { font-weight: 600; }
+thead .c-name { z-index: 7; background: #e5e7eb; }
+
+.c-num { min-width: 64px; }
+.c-num input { text-align: right; }
+.c-date { min-width: 58px; }
+.c-rate { min-width: 48px; }
+.c-rate input { text-align: right; }
+.c-memo { min-width: 70px; max-width: 70px; width: 70px; }
+.tbl tbody td.c-memo { padding: 2px; }
+.tbl tbody td.c-memo textarea {
+font-size: 8px;
+line-height: 1.3;
+width: 100%;
+max-width: 100%;
+height: 36px;
+border: none;
+background: transparent;
+font-family: inherit;
+outline: none;
+resize: none;
+padding: 2px 4px;
+display: block;
+white-space: pre-wrap;
+word-wrap: break-word;
+word-break: break-all;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+}
+.tbl tbody td.c-memo textarea:focus { font-size: 16px; background: #fef9c3; }
+.c-replay { min-width: 56px; }
+.c-replay input { text-align: right; }
+
+.c-input {
+background: #ecfeff;
+border-left: 1px dashed #67e8f9;
+border-right: 1px dashed #67e8f9;
+min-width: 64px;
+}
+.c-input input {
+text-align: right;
+font-weight: 700;
+color: #0e7490;
+background: transparent;
+}
+.c-input input:focus { background: #cffafe; }
+
+.c-cash {
+text-align: right;
+font-weight: 700;
+color: #059669;
+white-space: nowrap;
+padding: 7px 8px;
+min-width: 74px;
+font-size: 13px;
+}
+
+.c-del { width: 52px; text-align: center; }
+.del-btn {
+background: transparent;
+border: none;
+color: #9ca3af;
+padding: 8px 10px;
+font-size: 14px;
+}
+.del-btn.confirming {
+background: #fef2f2;
+color: #dc2626;
+font-weight: 700;
+font-size: 11px;
+border-radius: 6px;
+padding: 6px 6px;
+}
+
+.empty {
+text-align: center;
+color: #9ca3af;
+padding: 40px 20px;
+font-size: 14px;
+background: white;
+}
+
+@keyframes flashRow {
+0% { background: #fef08a; }
+100% { background: white; }
+}
+.flash { animation: flashRow 1.4s ease-out; }
+
+.hint {
+font-size: 11px; color: #6b7280;
+padding: 8px 12px 4px;
+background: white;
+}
+</style>
+
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="lbl">合計現金換算</div>
+    <div class="v" id="total">¥0</div>
+    <div class="s" id="totalSub">0店舗</div>
+  </div>
+  <button class="add-top" onclick="addStore()">＋ 追加</button>
+</div>
+
+<div class="hint">青い欄に新玉数を入力 → 玉数と日付が更新＋最上段へ移動。削除は右端✕を2回タップ。</div>
+
+<div class="wrap">
+  <table class="tbl" id="tbl">
+    <thead>
+      <tr>
+        <th class="c-name">店舗</th>
+        <th class="c-num">玉数</th>
+        <th class="c-date">日付</th>
+        <th class="c-input">新玉数</th>
+        <th class="c-rate">率</th>
+        <th class="c-cash">現金</th>
+        <th class="c-replay">再プレイ</th>
+        <th class="c-memo">メモ</th>
+        <th class="c-del">削除</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="emptyMsg" class="empty" style="display:none">＋ボタンから店舗を追加してください</div>
+
+<script>
+var KEY = 'pachiBallAssets_v1';
+var stores = [];
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) stores = JSON.parse(raw) || [];
+  } catch(e) { stores = []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(stores)); } catch(e) {}
+}
+function fmtYen(n) {
+  if (!isFinite(n)) return '¥0';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function calcCash(balls, rate) {
+  if (!balls || !rate || rate <= 0) return 0;
+  return (balls / rate) * 1000;
+}
+function todayStr() {
+  var d = new Date();
+  return (d.getMonth() + 1) + '/' + d.getDate();
+}
+function uid() {
+  return 's' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+}
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function getStore(id) {
+  for (var i = 0; i < stores.length; i++) {
+    if (stores[i].id === id) return stores[i];
+  }
+  return null;
+}
+
+function addStore() {
+  stores.unshift({
+    id: uid(), name: '', balls: null, lastVisit: '', rate: null, replay: '', memo: ''
+  });
+  save();
+  render();
+  window.scrollTo(0, 0);
+  setTimeout(function() {
+    var rows = document.querySelectorAll('#tbody tr');
+    if (rows.length) {
+      var inputs = rows[0].querySelectorAll('input');
+      if (inputs.length) inputs[0].focus();
+    }
+  }, 50);
+}
+
+function onCellChange(id, field, value) {
+  var s = getStore(id);
+  if (!s) return;
+  if (field === 'rate') {
+    if (value === '' || value == null) {
+      s.rate = null;
+    } else {
+      var r = parseFloat(value);
+      s.rate = (isFinite(r) && r > 0) ? r : null;
+    }
+  } else if (field === 'balls') {
+    if (value === '' || value == null) {
+      s.balls = null;
+    } else {
+      var m = parseFloat(value);
+      s.balls = isFinite(m) ? m : null;
+    }
+  } else {
+    s[field] = value;
+  }
+  save();
+  updateRowDisplay(id);
+  updateTotal();
+}
+
+function onNewBallsCommit(id, input) {
+  var raw = input.value;
+  if (raw === '' || raw == null) return;
+  var val = parseFloat(raw);
+  if (!isFinite(val) || val < 0) {
+    input.value = '';
+    return;
+  }
+  var s = getStore(id);
+  if (!s) return;
+  s.balls = val;
+  s.lastVisit = todayStr();
+
+  var idx = -1;
+  for (var i = 0; i < stores.length; i++) {
+    if (stores[i].id === id) { idx = i; break; }
+  }
+  if (idx > 0) {
+    stores.splice(idx, 1);
+    stores.unshift(s);
+  }
+
+  save();
+  input.value = '';
+  render();
+  window.scrollTo(0, 0);
+  setTimeout(function() {
+    var firstRow = document.querySelector('#tbody tr');
+    if (firstRow) {
+      var tds = firstRow.querySelectorAll('td');
+      for (var j = 0; j < tds.length; j++) {
+        tds[j].classList.add('flash');
+      }
+    }
+  }, 30);
+}
+
+function deleteStore(id) {
+  var btn = document.getElementById('del_' + id);
+  if (!btn) return;
+
+  if (btn.dataset.confirming === 'true') {
+    var ns = [];
+    for (var i = 0; i < stores.length; i++) {
+      if (stores[i].id !== id) ns.push(stores[i]);
+    }
+    stores = ns;
+    save();
+    render();
+    return;
+  }
+
+  btn.dataset.confirming = 'true';
+  btn.textContent = '削除？';
+  btn.classList.add('confirming');
+  setTimeout(function() {
+    var b = document.getElementById('del_' + id);
+    if (b && b.dataset.confirming === 'true') {
+      b.dataset.confirming = '';
+      b.textContent = '✕';
+      b.classList.remove('confirming');
+    }
+  }, 3000);
+}
+
+function updateTotal() {
+  var total = 0;
+  for (var i = 0; i < stores.length; i++) {
+    total += calcCash(stores[i].balls, stores[i].rate);
+  }
+  document.getElementById('total').textContent = fmtYen(total);
+  document.getElementById('totalSub').textContent = stores.length + '店舗';
+}
+
+function updateRowDisplay(id) {
+  var s = getStore(id);
+  if (!s) return;
+  var cashEl = document.getElementById('cash_' + id);
+  if (cashEl) cashEl.textContent = fmtYen(calcCash(s.balls, s.rate));
+}
+
+function render() {
+  updateTotal();
+  var emptyEl = document.getElementById('emptyMsg');
+  var wrapEl = document.querySelector('.wrap');
+  if (stores.length === 0) {
+    emptyEl.style.display = 'block';
+    wrapEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  wrapEl.style.display = 'block';
+
+  var html = '';
+  for (var k = 0; k < stores.length; k++) {
+    var s = stores[k];
+    var cash = calcCash(s.balls, s.rate);
+    var sid = s.id;
+
+    html += '<tr>';
+    html += '<td class="c-name"><input type="text" value="' + esc(s.name) + '" placeholder="店名" onchange="onCellChange(\'' + sid + '\', \'name\', this.value)"></td>';
+    html += '<td class="c-num"><input type="number" inputmode="numeric" placeholder="—" value="' + (s.balls == null ? '' : s.balls) + '" onchange="onCellChange(\'' + sid + '\', \'balls\', this.value)"></td>';
+    html += '<td class="c-date"><input type="text" value="' + esc(s.lastVisit) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'lastVisit\', this.value)"></td>';
+    html += '<td class="c-input"><input type="number" inputmode="numeric" placeholder="新" onblur="onNewBallsCommit(\'' + sid + '\', this)" onkeydown="if(event.key===\'Enter\')this.blur()"></td>';
+    html += '<td class="c-rate"><input type="number" inputmode="decimal" step="0.1" placeholder="例:250" value="' + (s.rate == null ? '' : s.rate) + '" onchange="onCellChange(\'' + sid + '\', \'rate\', this.value)"></td>';
+    html += '<td class="c-cash" id="cash_' + sid + '">' + fmtYen(cash) + '</td>';
+    html += '<td class="c-replay"><input type="text" inputmode="numeric" value="' + esc(s.replay) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'replay\', this.value)"></td>';
+    html += '<td class="c-memo"><textarea placeholder="—" onchange="onCellChange(\'' + sid + '\', \'memo\', this.value)">' + esc(s.memo) + '</textarea></td>';
+
+```
+html += '<td class="c-del"><button class="del-btn" id="del_' + sid + '" onclick="deleteStore(\'' + sid + '\')">✕</button></td>';
+html += '</tr>';
+```
+
+}
+document.getElementById(‘tbody’).innerHTML = html;
+}
+
+load();
+render();
+</script>
+
+</body>
+</html>
