@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="ja">
@@ -83,7 +82,30 @@ thead .c-name { z-index: 7; background: #e5e7eb; }
 .c-date { min-width: 58px; }
 .c-rate { min-width: 48px; }
 .c-rate input { text-align: right; }
-.c-memo { min-width: 70px; }
+.c-memo { min-width: 70px; max-width: 70px; width: 70px; }
+.tbl tbody td.c-memo { padding: 2px; }
+.tbl tbody td.c-memo textarea {
+font-size: 8px;
+line-height: 1.3;
+width: 100%;
+max-width: 100%;
+height: 36px;
+border: none;
+background: transparent;
+font-family: inherit;
+outline: none;
+resize: none;
+padding: 2px 4px;
+display: block;
+white-space: pre-wrap;
+word-wrap: break-word;
+word-break: break-all;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+}
+.tbl tbody td.c-memo textarea:focus { font-size: 16px; background: #fef9c3; }
+.c-replay { min-width: 56px; }
+.c-replay input { text-align: right; }
 
 .c-input {
 background: #eff6ff;
@@ -179,6 +201,7 @@ background: white;
         <th class="c-input">新枚数</th>
         <th class="c-rate">率</th>
         <th class="c-cash">現金</th>
+        <th class="c-replay">再プレイ</th>
         <th class="c-memo">メモ</th>
         <th class="c-del">削除</th>
       </tr>
@@ -230,7 +253,7 @@ function getStore(id) {
 
 function addStore() {
   stores.unshift({
-    id: uid(), name: '', medals: null, lastVisit: '', rate: null, memo: ''
+    id: uid(), name: '', medals: null, lastVisit: '', rate: null, replay: '', memo: ''
   });
   save();
   render();
@@ -375,11 +398,16 @@ function render() {
     html += '<td class="c-input"><input type="number" inputmode="numeric" placeholder="新" onblur="onNewMedalsCommit(\'' + sid + '\', this)" onkeydown="if(event.key===\'Enter\')this.blur()"></td>';
     html += '<td class="c-rate"><input type="number" inputmode="decimal" step="0.1" placeholder="例:50" value="' + (s.rate == null ? '' : s.rate) + '" onchange="onCellChange(\'' + sid + '\', \'rate\', this.value)"></td>';
     html += '<td class="c-cash" id="cash_' + sid + '">' + fmtYen(cash) + '</td>';
-    html += '<td class="c-memo"><input type="text" value="' + esc(s.memo) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'memo\', this.value)"></td>';
-    html += '<td class="c-del"><button class="del-btn" id="del_' + sid + '" onclick="deleteStore(\'' + sid + '\')">✕</button></td>';
-    html += '</tr>';
-  }
-  document.getElementById('tbody').innerHTML = html;
+    html += '<td class="c-replay"><input type="text" inputmode="numeric" value="' + esc(s.replay) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'replay\', this.value)"></td>';
+    html += '<td class="c-memo"><textarea placeholder="—" onchange="onCellChange(\'' + sid + '\', \'memo\', this.value)">' + esc(s.memo) + '</textarea></td>';
+
+```
+html += '<td class="c-del"><button class="del-btn" id="del_' + sid + '" onclick="deleteStore(\'' + sid + '\')">✕</button></td>';
+html += '</tr>';
+```
+
+}
+document.getElementById(‘tbody’).innerHTML = html;
 }
 
 load();
