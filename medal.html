@@ -9,7 +9,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", sans-serif; -webkit-text-size-adjust: 100%; }
 body { background: #f3f4f6; color: #111827; font-size: 16px; }
-input, button { font-family: inherit; }
+input, button, textarea { font-family: inherit; }
 
 .top {
 position: sticky; top: 0; z-index: 100;
@@ -33,10 +33,7 @@ overflow-x: auto;
 background: white;
 position: relative;
 }
-.tbl {
-border-collapse: collapse;
-font-size: 13px;
-}
+.tbl { border-collapse: collapse; font-size: 13px; }
 .tbl thead th {
 position: sticky; top: 0;
 background: #e5e7eb;
@@ -61,7 +58,6 @@ background: transparent;
 width: 100%;
 padding: 6px 6px;
 font-size: 16px;
-font-family: inherit;
 outline: none;
 display: block;
 min-height: 36px;
@@ -82,6 +78,7 @@ thead .c-name { z-index: 7; background: #e5e7eb; }
 .c-date { min-width: 58px; }
 .c-rate { min-width: 48px; }
 .c-rate input { text-align: right; }
+
 .c-memo { min-width: 70px; max-width: 70px; width: 70px; }
 .tbl tbody td.c-memo { padding: 2px; }
 .tbl tbody td.c-memo textarea {
@@ -92,7 +89,6 @@ max-width: 100%;
 height: 36px;
 border: none;
 background: transparent;
-font-family: inherit;
 outline: none;
 resize: none;
 padding: 2px 4px;
@@ -104,6 +100,7 @@ overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 }
 .tbl tbody td.c-memo textarea:focus { font-size: 16px; background: #fef9c3; }
+
 .c-replay { min-width: 56px; }
 .c-replay input { text-align: right; }
 
@@ -156,14 +153,6 @@ font-size: 14px;
 background: white;
 }
 
-.foot { padding: 14px 12px 40px; }
-.add-bottom {
-display: block; width: 100%;
-background: #4f46e5; color: white;
-border: none; padding: 13px;
-border-radius: 10px; font-weight: 600; font-size: 15px;
-}
-
 @keyframes flashRow {
 0% { background: #fef08a; }
 100% { background: white; }
@@ -213,7 +202,7 @@ background: white;
 <div id="emptyMsg" class="empty" style="display:none">＋ボタンから店舗を追加してください</div>
 
 <script>
-var KEY = 'medalAssets_v1';
+var KEY = "medalAssets_v1";
 var stores = [];
 
 function load() {
@@ -226,23 +215,23 @@ function save() {
   try { localStorage.setItem(KEY, JSON.stringify(stores)); } catch(e) {}
 }
 function fmtYen(n) {
-  if (!isFinite(n)) return '¥0';
-  return '¥' + Math.round(n).toLocaleString('ja-JP');
+  if (!isFinite(n)) return "¥0";
+  return "¥" + Math.round(n).toLocaleString("ja-JP");
 }
 function calcCash(medals, rate) {
-  if (!rate || rate <= 0) return 0;
+  if (!medals || !rate || rate <= 0) return 0;
   return (medals / rate) * 1000;
 }
 function todayStr() {
   var d = new Date();
-  return (d.getMonth() + 1) + '/' + d.getDate();
+  return (d.getMonth() + 1) + "/" + d.getDate();
 }
 function uid() {
-  return 's' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+  return "s" + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
 }
 function esc(s) {
-  if (s == null) return '';
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  if (s == null) return "";
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 function getStore(id) {
   for (var i = 0; i < stores.length; i++) {
@@ -253,15 +242,15 @@ function getStore(id) {
 
 function addStore() {
   stores.unshift({
-    id: uid(), name: '', medals: null, lastVisit: '', rate: null, replay: '', memo: ''
+    id: uid(), name: "", medals: null, lastVisit: "", rate: null, replay: "", memo: ""
   });
   save();
   render();
   window.scrollTo(0, 0);
   setTimeout(function() {
-    var rows = document.querySelectorAll('#tbody tr');
+    var rows = document.querySelectorAll("#tbody tr");
     if (rows.length) {
-      var inputs = rows[0].querySelectorAll('input');
+      var inputs = rows[0].querySelectorAll("input");
       if (inputs.length) inputs[0].focus();
     }
   }, 50);
@@ -270,15 +259,15 @@ function addStore() {
 function onCellChange(id, field, value) {
   var s = getStore(id);
   if (!s) return;
-  if (field === 'rate') {
-    if (value === '' || value == null) {
+  if (field === "rate") {
+    if (value === "" || value == null) {
       s.rate = null;
     } else {
       var r = parseFloat(value);
       s.rate = (isFinite(r) && r > 0) ? r : null;
     }
-  } else if (field === 'medals') {
-    if (value === '' || value == null) {
+  } else if (field === "medals") {
+    if (value === "" || value == null) {
       s.medals = null;
     } else {
       var m = parseFloat(value);
@@ -294,10 +283,10 @@ function onCellChange(id, field, value) {
 
 function onNewMedalsCommit(id, input) {
   var raw = input.value;
-  if (raw === '' || raw == null) return;
+  if (raw === "" || raw == null) return;
   var val = parseFloat(raw);
   if (!isFinite(val) || val < 0) {
-    input.value = '';
+    input.value = "";
     return;
   }
   var s = getStore(id);
@@ -315,25 +304,25 @@ function onNewMedalsCommit(id, input) {
   }
 
   save();
-  input.value = '';
+  input.value = "";
   render();
   window.scrollTo(0, 0);
   setTimeout(function() {
-    var firstRow = document.querySelector('#tbody tr');
+    var firstRow = document.querySelector("#tbody tr");
     if (firstRow) {
-      var tds = firstRow.querySelectorAll('td');
+      var tds = firstRow.querySelectorAll("td");
       for (var j = 0; j < tds.length; j++) {
-        tds[j].classList.add('flash');
+        tds[j].classList.add("flash");
       }
     }
   }, 30);
 }
 
 function deleteStore(id) {
-  var btn = document.getElementById('del_' + id);
+  var btn = document.getElementById("del_" + id);
   if (!btn) return;
 
-  if (btn.dataset.confirming === 'true') {
+  if (btn.dataset.confirming === "true") {
     var ns = [];
     for (var i = 0; i < stores.length; i++) {
       if (stores[i].id !== id) ns.push(stores[i]);
@@ -344,15 +333,15 @@ function deleteStore(id) {
     return;
   }
 
-  btn.dataset.confirming = 'true';
-  btn.textContent = '削除？';
-  btn.classList.add('confirming');
+  btn.dataset.confirming = "true";
+  btn.textContent = "削除？";
+  btn.classList.add("confirming");
   setTimeout(function() {
-    var b = document.getElementById('del_' + id);
-    if (b && b.dataset.confirming === 'true') {
-      b.dataset.confirming = '';
-      b.textContent = '✕';
-      b.classList.remove('confirming');
+    var b = document.getElementById("del_" + id);
+    if (b && b.dataset.confirming === "true") {
+      b.dataset.confirming = "";
+      b.textContent = "✕";
+      b.classList.remove("confirming");
     }
   }, 3000);
 }
@@ -362,53 +351,88 @@ function updateTotal() {
   for (var i = 0; i < stores.length; i++) {
     total += calcCash(stores[i].medals, stores[i].rate);
   }
-  document.getElementById('total').textContent = fmtYen(total);
-  document.getElementById('totalSub').textContent = stores.length + '店舗';
+  document.getElementById("total").textContent = fmtYen(total);
+  document.getElementById("totalSub").textContent = stores.length + "店舗";
 }
 
 function updateRowDisplay(id) {
   var s = getStore(id);
   if (!s) return;
-  var cashEl = document.getElementById('cash_' + id);
+  var cashEl = document.getElementById("cash_" + id);
   if (cashEl) cashEl.textContent = fmtYen(calcCash(s.medals, s.rate));
 }
 
+function buildRow(s) {
+  var sid = s.id;
+  var cash = calcCash(s.medals, s.rate);
+  var medalsVal = (s.medals == null ? "" : s.medals);
+  var rateVal = (s.rate == null ? "" : s.rate);
+
+  var html = "<tr>";
+  html += '<td class="c-name"><input type="text" value="' + esc(s.name) + '" placeholder="店名" data-id="' + sid + '" data-f="name"></td>';
+  html += '<td class="c-num"><input type="number" inputmode="numeric" placeholder="—" value="' + medalsVal + '" data-id="' + sid + '" data-f="medals"></td>';
+  html += '<td class="c-date"><input type="text" value="' + esc(s.lastVisit) + '" placeholder="—" data-id="' + sid + '" data-f="lastVisit"></td>';
+  html += '<td class="c-input"><input type="number" inputmode="numeric" placeholder="新" data-id="' + sid + '" data-newinput="1"></td>';
+  html += '<td class="c-rate"><input type="number" inputmode="decimal" step="0.1" placeholder="例:50" value="' + rateVal + '" data-id="' + sid + '" data-f="rate"></td>';
+  html += '<td class="c-cash" id="cash_' + sid + '">' + fmtYen(cash) + '</td>';
+  html += '<td class="c-replay"><input type="text" inputmode="numeric" value="' + esc(s.replay) + '" placeholder="—" data-id="' + sid + '" data-f="replay"></td>';
+  html += '<td class="c-memo"><textarea placeholder="—" data-id="' + sid + '" data-f="memo">' + esc(s.memo) + '</textarea></td>';
+
+html += ‘<td class="c-del"><button class="del-btn" id="del_' + sid + '" data-id="' + sid + '" data-del="1">✕</button></td>’;
+html += “</tr>”;
+return html;
+}
+
 function render() {
-  updateTotal();
-  var emptyEl = document.getElementById('emptyMsg');
-  var wrapEl = document.querySelector('.wrap');
-  if (stores.length === 0) {
-    emptyEl.style.display = 'block';
-    wrapEl.style.display = 'none';
-    return;
-  }
-  emptyEl.style.display = 'none';
-  wrapEl.style.display = 'block';
-
-  var html = '';
-  for (var k = 0; k < stores.length; k++) {
-    var s = stores[k];
-    var cash = calcCash(s.medals, s.rate);
-    var sid = s.id;
-
-    html += '<tr>';
-    html += '<td class="c-name"><input type="text" value="' + esc(s.name) + '" placeholder="店名" onchange="onCellChange(\'' + sid + '\', \'name\', this.value)"></td>';
-    html += '<td class="c-num"><input type="number" inputmode="numeric" placeholder="—" value="' + (s.medals == null ? '' : s.medals) + '" onchange="onCellChange(\'' + sid + '\', \'medals\', this.value)"></td>';
-    html += '<td class="c-date"><input type="text" value="' + esc(s.lastVisit) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'lastVisit\', this.value)"></td>';
-    html += '<td class="c-input"><input type="number" inputmode="numeric" placeholder="新" onblur="onNewMedalsCommit(\'' + sid + '\', this)" onkeydown="if(event.key===\'Enter\')this.blur()"></td>';
-    html += '<td class="c-rate"><input type="number" inputmode="decimal" step="0.1" placeholder="例:50" value="' + (s.rate == null ? '' : s.rate) + '" onchange="onCellChange(\'' + sid + '\', \'rate\', this.value)"></td>';
-    html += '<td class="c-cash" id="cash_' + sid + '">' + fmtYen(cash) + '</td>';
-    html += '<td class="c-replay"><input type="text" inputmode="numeric" value="' + esc(s.replay) + '" placeholder="—" onchange="onCellChange(\'' + sid + '\', \'replay\', this.value)"></td>';
-    html += '<td class="c-memo"><textarea placeholder="—" onchange="onCellChange(\'' + sid + '\', \'memo\', this.value)">' + esc(s.memo) + '</textarea></td>';
-
-```
-html += '<td class="c-del"><button class="del-btn" id="del_' + sid + '" onclick="deleteStore(\'' + sid + '\')">✕</button></td>';
-html += '</tr>';
-```
-
+updateTotal();
+var emptyEl = document.getElementById(“emptyMsg”);
+var wrapEl = document.querySelector(”.wrap”);
+if (stores.length === 0) {
+emptyEl.style.display = “block”;
+wrapEl.style.display = “none”;
+return;
 }
-document.getElementById(‘tbody’).innerHTML = html;
+emptyEl.style.display = “none”;
+wrapEl.style.display = “block”;
+
+var html = “”;
+for (var k = 0; k < stores.length; k++) {
+html += buildRow(stores[k]);
 }
+document.getElementById(“tbody”).innerHTML = html;
+}
+
+document.addEventListener(“change”, function(e) {
+var t = e.target;
+var id = t.getAttribute(“data-id”);
+var field = t.getAttribute(“data-f”);
+if (id && field) {
+onCellChange(id, field, t.value);
+}
+});
+
+document.addEventListener(“blur”, function(e) {
+var t = e.target;
+if (t.getAttribute && t.getAttribute(“data-newinput”) === “1”) {
+onNewMedalsCommit(t.getAttribute(“data-id”), t);
+}
+}, true);
+
+document.addEventListener(“keydown”, function(e) {
+if (e.key === “Enter”) {
+var t = e.target;
+if (t.getAttribute && t.getAttribute(“data-newinput”) === “1”) {
+t.blur();
+}
+}
+});
+
+document.addEventListener(“click”, function(e) {
+var t = e.target;
+if (t.getAttribute && t.getAttribute(“data-del”) === “1”) {
+deleteStore(t.getAttribute(“data-id”));
+}
+});
 
 load();
 render();
