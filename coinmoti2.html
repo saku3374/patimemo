@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>稼働メモ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#f0f0f0;color:#111;font-family:-apple-system,sans-serif;font-size:12px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+/* 統計 */
+#stats{background:#1a4aaa;padding:6px 8px;flex-shrink:0}
+.stat-top{display:flex;gap:6px;margin-bottom:4px}
+.stat-bottom{display:flex;gap:6px}.stat-bottom .st-v{font-size:12px}
+.st{flex:1;background:rgba(255,255,255,0.15);border-radius:7px;padding:4px;text-align:center}
+.st-l{font-size:9px;color:rgba(255,255,255,0.7);display:block}
+.st-v{font-size:16px;font-weight:bold;color:#fff;display:block}
+#st-coin{font-size:22px}
+/* 投入エリア（折りたたみ） */
+#inv-wrap{background:#fff;border-bottom:1px solid #ddd;flex-shrink:0;overflow:hidden;max-height:0}
+#inv-wrap.open{max-height:300px}
+.inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e0e0e0;margin:1px}
+.inv-cell{background:#fff;padding:4px 8px;display:flex;align-items:center;justify-content:space-between}
+.inv-lbl{font-size:10px;color:#888}
+.inv-tap{font-size:18px;font-weight:bold;color:#111;background:#fffbe6;border:2px solid #e8d060;border-radius:7px;padding:3px 10px;cursor:pointer;min-width:60px;text-align:right}
+.inv-tap.active{border-color:#1a4aaa;background:#e8f0ff}
+.inv-rate{background:#f5f5f5;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:10px;color:#888;grid-column:span 2}
+.rtog{padding:3px 10px;border-radius:5px;border:1px solid #ccc;background:#fff;font-size:11px;cursor:pointer}
+.rtog.on{background:#1a4aaa;color:#fff;border-color:#1a4aaa}
+#inv-toggle{background:#fff;border:none;border-bottom:1px solid #ddd;width:100%;padding:6px;font-size:11px;color:#1a4aaa;font-weight:bold;cursor:pointer;flex-shrink:0;text-align:center}
+/* 当たりリスト */
+#list-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.list-hdr{background:#1a6a1a;color:#fff;font-size:10px;font-weight:bold;padding:4px 8px;display:flex;gap:4px;flex-shrink:0}
+.lh-idx{width:18px;text-align:center;flex-shrink:0}
+.lh-g{flex:2;text-align:center}
+.lh-bt{width:48px;text-align:center;flex-shrink:0}
+.lh-role{flex:2;text-align:center}
+.lh-pay{flex:2;text-align:center}
+.lh-del{width:22px;flex-shrink:0}
+#hit-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.empty-list{padding:30px;text-align:center;color:#bbb;font-size:13px}
+.hit-row{display:flex;align-items:center;gap:4px;padding:5px 8px;border-bottom:1px solid #eee}
+.hit-row:nth-child(even){background:#f9f9f9}
+.hr-idx{width:18px;font-size:10px;color:#bbb;text-align:center;flex-shrink:0}
+.tap-cell{border-radius:6px;padding:4px 6px;cursor:pointer;text-align:center;font-weight:bold}
+.tc-g{flex:2;font-size:15px;color:#111;background:#e8f5e8;border:1px solid #88cc88}
+.tc-bt{width:48px;flex-shrink:0}
+.tc-bt span{display:block;padding:3px 4px;border-radius:5px;font-size:11px;font-weight:bold;color:#fff;cursor:pointer}
+.tc-role{flex:2;font-size:11px;color:#336;background:#eef;border:1px solid #99c}
+.tc-role.empty{color:#bbb;background:#f5f5f5;border:1px dashed #ddd}
+.tc-pay{flex:2;font-size:13px;color:#0a6a0a;background:#e8f5e8;border:1px solid #88cc88}
+.tc-pay.empty{color:#bbb;background:#f5f5f5;border:1px dashed #ddd}
+.hr-del{width:22px;flex-shrink:0}
+.del-btn{background:none;border:none;color:#cc3333;font-size:14px;cursor:pointer;padding:2px;width:100%}
+.addrow-btn{background:#f5fff5;border-top:1px solid #ddd;padding:12px;text-align:center;color:#1a6a1a;font-weight:bold;font-size:14px;cursor:pointer;flex-shrink:0}
+.addrow-btn:active{background:#e5ffe5}
+/* 下部ボタン */
+#bottom-btns{display:flex;gap:1px;background:#ddd;flex-shrink:0}
+.bb{flex:1;background:#fff;padding:10px 2px;text-align:center;cursor:pointer;font-size:12px;font-weight:bold}
+.bb:active{background:#f0f0f0}
+.bb-blue{color:#1a4aaa}.bb-gold{color:#b8940a}.bb-gray{color:#555}.bb-red{color:#881010}
+/* テンキーモーダル */
+#npad-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:100;display:none}
+#npad-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.2);z-index:200;display:none;padding:12px 10px 8px}
+.npm-lbl{font-size:11px;color:#888;text-align:center;margin-bottom:4px}
+.npm-val{font-size:32px;font-weight:bold;text-align:right;background:#f5f5f5;border-radius:10px;padding:8px 14px;margin-bottom:10px;min-height:54px;color:#111}
+.nrow{display:flex;gap:6px;margin-bottom:6px}
+.nk{flex:1;padding:14px 0;background:#f0f0f0;border:none;border-radius:9px;font-size:20px;font-weight:bold;color:#111;cursor:pointer}
+.nk:active{background:#ddd}
+.nkc{background:#ffdddd;color:#cc0000}.nkd{background:#dde4ff;color:#114}
+.nkok{background:#1a4aaa;color:#fff;font-size:14px}
+/* 選択モーダル */
+#sel-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:100;display:none}
+#sel-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,0.2);z-index:200;display:none;padding:14px 12px 10px}
+.sm-lbl{font-size:11px;color:#888;text-align:center;margin-bottom:10px;font-weight:bold}
+.sm-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.sm-btn{padding:12px 16px;border:2px solid #ddd;border-radius:10px;background:#f5f5f5;color:#444;font-size:14px;font-weight:bold;cursor:pointer;min-width:75px;text-align:center}
+.sm-btn.on{border-color:#1a4aaa;background:#e8f0ff;color:#1a4aaa}
+.sm-close{width:100%;padding:12px;background:#555;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer}
+/* 記録パネル */
+#rec-panel{position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f0f0;z-index:300;display:none;flex-direction:column}
+.rp-hdr{background:#222;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.rp-hdr span{color:#fff;font-weight:bold}
+.rp-hdr button{background:#555;border:none;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer}
+#rec-list{flex:1;overflow-y:auto;padding:8px}
+.rec-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;position:relative}
+#msg{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:7px 18px;border-radius:20px;font-size:12px;z-index:500;display:none;white-space:nowrap}
+.ov2{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:400;display:none}
+.tmodal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:14px;padding:18px;z-index:500;display:none;width:85%;max-width:320px}
+.tm-lbl{font-size:13px;font-weight:bold;color:#333;margin-bottom:10px}
+.tm-in{width:100%;font-size:16px;padding:8px 10px;border:2px solid #ddd;border-radius:8px;outline:none;margin-bottom:12px}
+.tm-cancel{flex:1;padding:10px;background:#eee;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.tm-save{flex:2;padding:10px;background:#1a4aaa;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="stats">
+  <div class="stat-top">
+    <div class="st"><span class="st-l">コイン持ち</span><span class="st-v" id="st-coin">--G/k</span></div>
+    <div class="st"><span class="st-l">k換算</span><span class="st-v" id="st-kv">--k</span></div>
+    <div class="st"><span class="st-l">使用枚数</span><span class="st-v" id="st-used">--枚</span></div>
+    <div class="st"><span class="st-l">総G数</span><span class="st-v" id="st-g">0G</span></div>
+  </div>
+  <div class="stat-bottom">
+    <div class="st" style=""><span class="st-l">合成確率</span><span class="st-v" id="st-all">--</span></div>
+    <div class="st" style=""><span class="st-l">RB</span><span class="st-v" id="st-b0">--</span></div>
+    <div class="st" style=""><span class="st-l">BB</span><span class="st-v" id="st-b1">--</span></div>
+    <div class="st" style=""><span class="st-l">総回数</span><span class="st-v" id="st-tot">0回</span></div>
+  </div>
+</div>
+<button id="inv-toggle" onclick="toggleInv()">💰 投入・手持ち ▼</button>
+<div id="inv-wrap">
+  <div class="inv-grid">
+    <div class="inv-cell"><span class="inv-lbl">再プレイ(枚)</span><div class="inv-tap" id="it-rp" onclick="openNpad('rp')">0</div></div>
+    <div class="inv-cell"><span class="inv-lbl">クレジット(枚)</span><div class="inv-tap" id="it-cre" onclick="openNpad('cre')">0</div></div>
+    <div class="inv-cell"><span class="inv-lbl">お金(k)</span><div class="inv-tap" id="it-cash" onclick="openNpad('cash')">0</div></div>
+    <div class="inv-cell"><span class="inv-lbl">サンド(枚)</span><div class="inv-tap" id="it-sand" onclick="openNpad('sand')">0</div></div>
+    <div class="inv-cell" style="grid-column:span 2">
+      <div class="inv-rate">
+        換算:
+        <span class="rtog on" id="r46" onclick="setRate(46)">46枚/k</span>
+        <span class="rtog" id="r50" onclick="setRate(50)">50枚/k</span>
+        <span id="cash-conv" style="color:#444">→0枚</span>
+      </div>
+    </div>
+    <div class="inv-cell" style="grid-column:span 2"><span class="inv-lbl">現在G数（未当選）</span><div class="inv-tap" id="it-curg" onclick="openNpad('curg')">0</div></div>
+  </div>
+</div>
+<div id="list-wrap">
+  <div class="list-hdr">
+    <span class="lh-idx"></span>
+    <span class="lh-g">G数</span>
+    <span class="lh-bt">種別</span>
+    <span class="lh-role">重複役</span>
+    <span class="lh-pay">獲得(枚)</span>
+    <span class="lh-del"></span>
+  </div>
+  <div id="hit-list"><div class="empty-list">記録なし</div></div>
+  <div class="addrow-btn" onclick="addRow()">＋ 当たり追加</div>
+</div>
+<div id="bottom-btns">
+  <div class="bb bb-blue" onclick="doCopy()">📋 コピー</div>
+  <div class="bb bb-gold" onclick="saveRecord()">💾 保存</div>
+  <div class="bb bb-gray" onclick="showRecs()">📂 記録</div>
+  <div class="bb bb-red" onclick="doReset()">🗑 リセット</div>
+</div>
+<div id="npad-ov" onclick="closeNpad()"></div>
+<div id="npad-modal">
+  <div class="npm-lbl" id="npad-lbl">値を入力</div>
+  <div class="npm-val" id="npad-val">---</div>
+  <div class="nrow"><button class="nk" onclick="nk(7)">7</button><button class="nk" onclick="nk(8)">8</button><button class="nk" onclick="nk(9)">9</button></div>
+  <div class="nrow"><button class="nk" onclick="nk(4)">4</button><button class="nk" onclick="nk(5)">5</button><button class="nk" onclick="nk(6)">6</button></div>
+  <div class="nrow"><button class="nk" onclick="nk(1)">1</button><button class="nk" onclick="nk(2)">2</button><button class="nk" onclick="nk(3)">3</button></div>
+  <div class="nrow"><button class="nk nkc" onclick="nk('C')">C</button><button class="nk" onclick="nk(0)">0</button><button class="nk nkd" onclick="nk('DEL')">←</button></div>
+  <div class="nrow"><button class="nk nkok" style="flex:3" onclick="closeNpad()">完了</button></div>
+</div>
+<div id="sel-ov" onclick="closeSel()"></div>
+<div id="sel-modal">
+  <div class="sm-lbl" id="sel-lbl">選択してください</div>
+  <div class="sm-btns" id="sel-btns"></div>
+  <button class="sm-close" onclick="closeSel()">閉じる</button>
+</div>
+<div id="rec-panel">
+  <div class="rp-hdr"><span>📂 過去記録</span><button onclick="closeRecs()">閉じる</button></div>
+  <div id="rec-list"></div>
+</div>
+<div id="title-ov" class="ov2"></div>
+<div id="title-modal" class="tmodal">
+  <div class="tm-lbl">タイトル</div>
+  <input id="title-input" class="tm-in" type="text" placeholder="例:北斗 3/15">
+  <div style="display:flex;gap:8px">
+    <button onclick="closeTitleModal()" class="tm-cancel">ｷｬﾝｾﾙ</button>
+    <button onclick="doSave()" class="tm-save">保存</button>
+  </div>
+</div>
+<div id="msg"></div>
+<script>
+var cashRate=46,rp=0,cash=0,cre=0,sand=0,curG=0;
+var hits=[];
+var bonusTypes=[{name:'RB',color:'#555'},{name:'BB',color:'#cc0000'}];
+var roleTypes=['チェリー','スイカ','単独','リプレイ','不明'];
+var npadKey=null,npadBuf='',selKey=null,selIdx=-1,invOpen=false;
+var mt2=null;
+function sm(t){var el=document.getElementById('msg');el.textContent=t;el.style.display='block';if(mt2){clearTimeout(mt2);}mt2=setTimeout(function(){el.style.display='none';},2500);}
+function calc(){
+  var tG=curG,tP=0,bc=[0,0];
+  for(var i=0;i<hits.length;i++){
+    tG+=hits[i].g||0;
+    if(hits[i].payout>=0){tP+=hits[i].payout;}
+    if(hits[i].btype<2){bc[hits[i].btype]++;}
+  }
+  var inv=rp+Math.round(cash*cashRate);
+  var used=tP+inv-cre-sand;
+  var coin=used>0&&tG>0?tG/(used/50):0;
+  return{tG:tG,used:used,coin:coin,kv:used>0?(used/50).toFixed(1):0,
+    tot:hits.length,ap:hits.length>0?Math.round(tG/hits.length):0,
+    bc:bc,bp:[bc[0]>0?Math.round(tG/bc[0]):0,bc[1]>0?Math.round(tG/bc[1]):0]};
+}
+function updStats(){
+  var s=calc();
+  var el=document.getElementById('st-coin');
+  if(s.coin>0){el.textContent=s.coin.toFixed(1)+'G/k';el.style.color=s.coin>=34?'#aaffaa':s.coin>=28?'#ffd700':'#ff8888';}
+  else{el.textContent='--G/k';el.style.color='#fff';}
+  document.getElementById('st-kv').textContent=s.kv>0?s.kv+'k':'--k';
+  document.getElementById('st-used').textContent=s.used>0?s.used+'枚':'--枚';
+  document.getElementById('st-g').textContent=s.tG+'G';
+  document.getElementById('st-all').textContent=s.ap>0?'1/'+s.ap:'--';
+  document.getElementById('st-b0').textContent=(s.bp[0]>0?'1/'+s.bp[0]:'--')+'\n'+s.bc[0]+'回';
+  document.getElementById('st-b1').textContent=(s.bp[1]>0?'1/'+s.bp[1]:'--')+'\n'+s.bc[1]+'回';
+  document.getElementById('st-tot').textContent=s.tot+'回';
+  document.getElementById('cash-conv').textContent='→'+Math.round(cash*cashRate)+'枚';
+}
+function renderList(){
+  var el=document.getElementById('hit-list');
+  if(hits.length===0){el.innerHTML='<div class="empty-list">記録なし</div>';return;}
+  var h='';
+  for(var i=0;i<hits.length;i++){
+    var hit=hits[i];
+    var btc=bonusTypes[hit.btype]?bonusTypes[hit.btype].color:'#888';
+    var btn=bonusTypes[hit.btype]?bonusTypes[hit.btype].name:'?';
+    var rn=hit.role>=0&&roleTypes[hit.role]?roleTypes[hit.role]:'---';
+    var roleClass=hit.role>=0?'tap-cell tc-role':'tap-cell tc-role empty';
+    var payStr=hit.payout>=0?hit.payout+'枚':'---';
+    var payClass=hit.payout>=0?'tap-cell tc-pay':'tap-cell tc-pay empty';
+    h+='<div class="hit-row">';
+    h+='<div class="hr-idx">'+(i+1)+'</div>';
+    h+='<div class="tap-cell tc-g" onclick="openNpadHit('+i+',\'g\')">'+( hit.g||0)+'G</div>';
+    h+='<div class="tc-bt"><span style="background:'+btc+'" onclick="openSelHit('+i+',\'btype\')">'+btn+'</span></div>';
+    h+='<div class="'+roleClass+'" onclick="openSelHit('+i+',\'role\')">'+rn+'</div>';
+    h+='<div class="'+payClass+'" onclick="openNpadHit('+i+',\'payout\')">'+payStr+'</div>';
+    h+='<div class="hr-del"><button class="del-btn" onclick="delHit('+i+')">✕</button></div>';
+    h+='</div>';
+  }
+  el.innerHTML=h;
+  el.scrollTop=el.scrollHeight;
+}
+function addRow(){
+  hits.push({g:0,btype:0,role:-1,payout:-1});
+  updStats();renderList();
+}
+// テンキー
+function openNpad(key){
+  npadKey=key;
+  var v=key==='rp'?rp:key==='cash'?cash:key==='cre'?cre:key==='sand'?sand:curG;
+  npadBuf=v===0?'':''+v;
+  var lbls={rp:'再プレイ(枚)',cash:'お金(k)',cre:'クレジット(枚)',sand:'サンド(枚)',curg:'現在G数（未当選）'};
+  document.getElementById('npad-lbl').textContent=lbls[key]||'値を入力';
+  document.getElementById('npad-val').textContent=npadBuf===''?'---':npadBuf;
+  document.getElementById('npad-modal').style.display='block';
+  document.getElementById('npad-ov').style.display='block';
+  var ids=['rp','cash','cre','sand','curg'];
+  for(var x=0;x<ids.length;x++){var e=document.getElementById('it-'+ids[x]);if(e){e.className='inv-tap'+(ids[x]===key?' active':'');}}
+}
+function openNpadHit(idx,field){
+  npadKey='hit_'+idx+'_'+field;
+  var v=hits[idx][field];
+  npadBuf=v>0?''+v:'';
+  var lbls={g:(idx+1)+'回G数',payout:(idx+1)+'回獲得'};
+  document.getElementById('npad-lbl').textContent=lbls[field]||'値を入力';
+  document.getElementById('npad-val').textContent=npadBuf===''?'---':npadBuf;
+  document.getElementById('npad-modal').style.display='block';
+  document.getElementById('npad-ov').style.display='block';
+}
+function nk(k){
+  if(k==='C'){npadBuf='';}else if(k==='DEL'){npadBuf=npadBuf.slice(0,-1);}
+  else{if(npadBuf.length<6){npadBuf=npadBuf+''+k;}}
+  document.getElementById('npad-val').textContent=npadBuf===''?'---':npadBuf;
+}
+function closeNpad(){
+  var v=npadBuf===''?0:parseInt(npadBuf,10);
+  if(npadKey&&npadKey.indexOf('hit_')===0){
+    var p=npadKey.split('_');
+    var idx=parseInt(p[1],10);
+    var field=p[2];
+    if(field==='payout'){
+      hits[idx].payout=npadBuf===''?-1:v;
+      if(idx===hits.length-1&&hits[idx].payout>=0){
+        hits.push({g:0,btype:0,role:-1,payout:-1});
+      }
+    } else {hits[idx][field]=v;}
+    renderList();updStats();
+  } else if(npadKey){
+    if(npadKey==='rp'){rp=v;document.getElementById('it-rp').textContent=v;}
+    else if(npadKey==='cash'){cash=v;document.getElementById('it-cash').textContent=v;}
+    else if(npadKey==='cre'){cre=v;document.getElementById('it-cre').textContent=v;}
+    else if(npadKey==='sand'){sand=v;document.getElementById('it-sand').textContent=v;}
+    else if(npadKey==='curg'){curG=v;document.getElementById('it-curg').textContent=v;}
+    updStats();
+  }
+  document.getElementById('npad-modal').style.display='none';
+  document.getElementById('npad-ov').style.display='none';
+  var ids=['rp','cash','cre','sand','curg'];
+  for(var y=0;y<ids.length;y++){var e=document.getElementById('it-'+ids[y]);if(e){e.className='inv-tap';}}
+  npadKey=null;npadBuf='';
+}
+// 選択モーダル
+function openSelHit(idx,key){
+  selIdx=idx;selKey=key;
+  var types=key==='btype'?bonusTypes.map(function(b){return b.name;}):roleTypes;
+  var cur=key==='btype'?hits[idx].btype:hits[idx].role;
+  document.getElementById('sel-lbl').textContent=key==='btype'?'種別を選択':'重複役を選択';
+  var h='';
+  for(var i=0;i<types.length;i++){
+    h+='<div class="sm-btn'+(cur===i?' on':'')+'" onclick="selItem('+i+')">'+types[i]+'</div>';
+  }
+  if(key==='role'){h+='<div class="sm-btn'+(cur===-1?' on':'')+'" onclick="selItem(-1)">なし</div>';}
+  document.getElementById('sel-btns').innerHTML=h;
+  document.getElementById('sel-modal').style.display='block';
+  document.getElementById('sel-ov').style.display='block';
+}
+function selItem(v){
+  if(selKey==='btype'){hits[selIdx].btype=v;}
+  else{hits[selIdx].role=v;}
+  closeSel();
+}
+function closeSel(){
+  document.getElementById('sel-modal').style.display='none';
+  document.getElementById('sel-ov').style.display='none';
+  selKey=null;selIdx=-1;
+  updStats();renderList();
+}
+function toggleInv(){
+  invOpen=!invOpen;
+  document.getElementById('inv-wrap').className=invOpen?'open':'';
+  document.getElementById('inv-toggle').textContent='💰 投入・手持ち '+(invOpen?'▲':'▼');
+}
+function setRate(v){
+  cashRate=v;
+  document.getElementById('r46').className='rtog'+(v===46?' on':'');
+  document.getElementById('r50').className='rtog'+(v===50?' on':'');
+  updStats();
+}
+function delHit(idx){hits.splice(idx,1);updStats();renderList();}
+function doCopy(){
+  var s=calc();
+  var lines=['【稼働メモ】','コイン持ち: '+(s.coin>0?s.coin.toFixed(2)+'G/k':'--'),'総G数: '+s.tG+'G / 使用: '+s.kv+'k','合成: 1/'+(s.ap||'--')+' ('+s.tot+'回)'];
+  for(var b=0;b<bonusTypes.length;b++){lines.push(bonusTypes[b].name+': 1/'+(s.bp[b]||'--')+' ('+s.bc[b]+'回)');}
+  lines.push('---\n回\tG数\t種別\t重複役\t獲得枚数');
+  for(var i=0;i<hits.length;i++){var h=hits[i];lines.push((i+1)+'\t'+(h.g||0)+'\t'+(bonusTypes[h.btype]?bonusTypes[h.btype].name:'')+'\t'+(h.role>=0&&roleTypes[h.role]?roleTypes[h.role]:'')+'\t'+(h.payout>=0?h.payout:'---'));}
+  var text=lines.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){sm('コピー完了');});}
+  else{var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);sm("コピー完了");}
+}
+function saveRecord(){
+  document.getElementById('title-input').value='';
+  document.getElementById('title-modal').style.display='block';
+  document.getElementById('title-ov').style.display='block';
+  setTimeout(function(){document.getElementById('title-input').focus();},100);
+}
+function closeTitleModal(){
+  document.getElementById('title-modal').style.display='none';
+  document.getElementById('title-ov').style.display='none';
+}function doSave(){
+  var s=calc();var now=new Date();
+  var ds=(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+('0'+now.getMinutes()).slice(-2);
+  var title=document.getElementById('title-input').value.trim()||ds;
+  var rec={date:ds,title:title,coin:s.coin,tG:s.tG,kv:s.kv,tot:s.tot,bc:s.bc,hits:JSON.parse(JSON.stringify(hits))};
+  var recs=[];try{recs=JSON.parse(localStorage.getItem('slotRecs8')||'[]');}catch(e){}
+  recs.unshift(rec);if(recs.length>3){recs=recs.slice(0,3);}
+  localStorage.setItem('slotRecs8',JSON.stringify(recs));
+  closeTitleModal();sm('保存:「'+title+'」');
+}
+function showRecs(){
+  var recs=[];try{recs=JSON.parse(localStorage.getItem('slotRecs8')||'[]');}catch(e){}
+  var el=document.getElementById('rec-list');
+  if(recs.length===0){el.innerHTML='<div style="padding:20px;color:#888;text-align:center">記録なし</div>';}
+  else{var h='';for(var i=0;i<recs.length;i++){var r=recs[i];var cc=r.coin>=34?'#0a8a0a':r.coin>=28?'#b8940a':'#cc0000';
+    h+='<div class="rec-card" >';
+    h+='<div style="font-size:14px;font-weight:bold;margin-bottom:2px">'+(r.title||r.date)+'</div>';
+    h+='<div style="font-size:10px;color:#888">'+r.date+'</div>';
+    h+='<div style="font-size:20px;font-weight:bold;color:'+cc+'">'+(r.coin>0?r.coin.toFixed(1)+'G/k':'--G/k')+'</div>';
+    h+='<div style="font-size:11px;color:#888">総G:'+r.tG+'G | 使用:'+r.kv+'k | '+r.tot+'回</div>';
+    if(r.hits&&r.hits.length>0){
+      h+='<div id="detail_'+i+'" style="display:none;margin-top:8px;border-top:1px solid #eee;padding-top:4px">';
+      for(var j=0;j<r.hits.length;j++){
+        var hh=r.hits[j];
+        var bn=bonusTypes[hh.btype]?bonusTypes[hh.btype].name:'?';
+        var rn=hh.role>=0&&roleTypes[hh.role]?roleTypes[hh.role]:'---';
+        var pn=hh.payout>=0?hh.payout+'枚':'---';
+        var bc2=bonusTypes[hh.btype]?bonusTypes[hh.btype].color:'#888';
+        h+='<div style="font-size:11px;display:flex;gap:5px;padding:2px 0;border-bottom:1px solid #f5f5f5">'+(j+1)+'. <b>'+(hh.g||0)+'G</b> <span style="background:'+bc2+';color:#fff;padding:1px 4px;border-radius:3px">'+bn+'</span> '+rn+' / '+pn+'</div>';
+      }
+      h+='</div>';
+      h+='<button onclick="toggleDetail('+i+')" id="dtoggle_'+i+'" style="margin-top:5px;border:1px solid #ddd;border-radius:5px;color:#336;font-size:11px;padding:3px 7px;cursor:pointer;background:none">▼</button>';
+    }
+    h+='<button onclick="loadRecord('+i+')" class="tm-save" style="margin-top:5px;margin-left:5px;padding:3px 8px;font-size:11px">↩読込</button>';
+    h+='<button onclick="delRecord('+i+')" style="position:absolute;top:8px;right:8px;border:1px solid #ddd;border-radius:5px;color:#c00;font-size:11px;padding:2px 7px;cursor:pointer;background:none">削除</button>';
+    h+='</div>';}el.innerHTML=h;}
+  document.getElementById('rec-panel').style.display='flex';
+}
+function closeRecs(){document.getElementById('rec-panel').style.display='none';}
+function delRecord(idx){
+  var recs=[];try{recs=JSON.parse(localStorage.getItem('slotRecs8')||'[]');}catch(e){}
+  recs.splice(idx,1);
+  localStorage.setItem('slotRecs8',JSON.stringify(recs));
+  showRecs();
+}
+function toggleDetail(idx){
+  var el=document.getElementById('detail_'+idx);
+  var btn=document.getElementById('dtoggle_'+idx);
+  if(el.style.display==='none'){el.style.display='block';btn.textContent='▲';}
+  else{el.style.display='none';btn.textContent='▼';}
+}
+function loadRecord(idx){
+  var recs=[];try{recs=JSON.parse(localStorage.getItem('slotRecs8')||'[]');}catch(e){}
+  var r=recs[idx];if(!r){return;}
+  hits=r.hits?JSON.parse(JSON.stringify(r.hits)):[{g:0,btype:0,role:-1,payout:-1}];
+  closeRecs();updStats();renderList();
+  sm('「'+(r.title||r.date)+'」を読込');
+}
+function doReset(){rp=0;cash=0;cre=0;sand=0;curG=0;hits=[{g:0,btype:0,role:-1,payout:-1}];npadKey=null;npadBuf='';var ks=['rp','cash','cre','sand','curg'];for(var i=0;i<ks.length;i++){var e=document.getElementById('it-'+ks[i]);if(e){e.textContent='0';}}updStats();renderList();sm('リセット完了');}
+updStats();
+hits.push({g:0,btype:0,role:-1,payout:-1});
+renderList();
+</script>
+</body>
+</html>
