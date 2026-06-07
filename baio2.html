@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>BIO3 フィギュア割合</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;background:#1a1a1a;color:#eee;font-size:16px;padding:8px 6px 20px}
 .hd{background:linear-gradient(135deg,#8b0000,#c0392b);color:#fff;padding:10px;border-radius:8px;text-align:center;font-weight:bold;margin-bottom:8px}
 .hd .sub{font-size:11px;font-weight:normal;opacity:0.9;margin-top:2px}
@@ -28,7 +28,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;bac
 .br>*{flex:1;min-width:0}
 .pls{height:26px;background:#3a5f7d;color:#fff;border:none;border-radius:3px;font-size:16px;font-weight:bold;line-height:1;padding:0;touch-action:manipulation}
 .pls:active{background:#2a4d68}
-.inp{height:30px;width:100%;text-align:center;background:#444;color:#fff;border:none;border-radius:3px;font-size:16px;font-weight:bold;padding:0;-moz-appearance:textfield}
+.inp{height:30px;width:100%;text-align:center;background:#444;color:#fff;border:none;border-radius:3px;font-size:16px;font-weight:bold;padding:0;-moz-appearance:textfield;user-select:text;-webkit-user-select:text}
 .inp::-webkit-outer-spin-button,.inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .inp:focus{outline:2px solid #f1c40f;background:#555}
 .mns{height:18px;background:#3a2d2d;color:#aaa;border:none;border-radius:3px;font-size:12px;line-height:1;padding:0;touch-action:manipulation}
@@ -145,7 +145,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;bac
 <button class="npd-key" onclick="npKey('1')">1</button>
 <button class="npd-key" onclick="npKey('2')">2</button>
 <button class="npd-key" onclick="npKey('3')">3</button>
-<button class="npd-key npd-del" onclick="npKey('del')">⌫</button>
+<button class="npd-key npd-del" onclick="npKey('del')">C</button>
 <button class="npd-key" onclick="npKey('0')">0</button>
 <button class="npd-key npd-ok" onclick="npKey('ok')">OK</button>
 </div>
@@ -154,15 +154,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;bac
 <button class="bftab" id="bfTab" onclick="toggleFloat()">ベル ▶</button>
 <div id="bfBody" style="display:none;flex-direction:column;gap:4px;margin-top:4px">
 <div class="bfloat-lbl">ベル</div>
-<button class="bfloat-plus" onclick="incBell()">+</button>
 <button class="bfloat-cnt" id="fBell" onclick="openNp('bell')">0</button>
+<button class="bfloat-plus" onclick="incBell()">+</button>
 <button class="bfloat-minus" onclick="decBell()">−</button>
 <div class="bfloat-sep"></div>
 <div class="gnum-wrap">
 <div class="gnum-col">
 <div class="bfloat-lbl">G数</div>
-<button class="bfloat-gplus" onclick="incGnum()">+</button>
 <button class="bfloat-cnt" id="fGnum" onclick="openNp('gnum')">0</button>
+<button class="bfloat-gplus" onclick="incGnum()">+</button>
 <button class="bfloat-minus" onclick="decGnum()">−</button>
 <div class="bfloat-rate" id="fRate">-</div>
 </div>
@@ -513,7 +513,7 @@ npBuf='';
 
 function npKey(k){
 if(k==='del'){
-npBuf=npBuf.slice(0,-1);
+npBuf='';
 }else if(k==='ok'){
 var v=parseInt(npBuf)||0;
 if(v<0)v=0;
