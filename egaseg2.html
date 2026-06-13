@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>セグ記録</title>
+<style>
+* { box-sizing: border-box; touch-action: manipulation; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; padding-bottom: 400px; }
+#tabs { display: flex; border-bottom: 2px solid #333; }
+.tab { flex: 1; padding: 12px; text-align: center; font-size: 15px; font-weight: bold; background: #1a1a1a; color: #666; cursor: pointer; }
+.tab.active { background: #222; color: #fff; border-bottom: 3px solid #f08; }
+#input-area { position: fixed; bottom: 110px; left: 0; right: 0; padding: 12px; background: #1a1a1a; border-top: 2px solid #333; border-bottom: 2px solid #333; z-index: 10; }
+#lamps { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; }
+.lamp { width: 30px; height: 30px; border-radius: 50%; background: #222; border: 2px solid #444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #555; user-select: none; }
+.lamp.on { background: #e0193a; border-color: #ff4060; color: #fff; font-weight: bold; }
+#round-btns { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.rbtn { min-width: 50px; height: 44px; padding: 0 10px; border-radius: 6px; border: 2px solid #444; background: #1a1a1a; color: #aaa; font-size: 16px; font-weight: bold; cursor: pointer; user-select: none; }
+.rbtn.selected { border-color: #f08; background: #3a1020; color: #fff; }
+#record-btn { display: block; width: 100%; padding: 12px; background: #c01030; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 8px; }
+#record-btn:active { background: #900; }
+#reset-btn { display: block; width: 100%; padding: 9px; background: #333; color: #aaa; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
+#list-area { padding: 10px 12px; }
+#sort-btns { display: flex; gap: 6px; margin-bottom: 10px; }
+.sbtn { flex: 1; padding: 7px 4px; font-size: 13px; border: 2px solid #333; border-radius: 6px; background: #1a1a1a; color: #777; cursor: pointer; text-align: center; }
+.sbtn.active { border-color: #f08; color: #fff; background: #2a1020; }
+#list { }
+.list-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: #1a1a1a; margin-bottom: 6px; }
+.row-lamps { display: flex; gap: 3px; }
+.rl { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+.rl.on { background: #e0193a; color: #fff; }
+.rl.off { background: #222; color: #444; border: 1px solid #333; }
+.row-result { margin-left: auto; font-size: 15px; font-weight: bold; color: #f08; min-width: 32px; text-align: right; }
+#bottom-btns { padding: 10px 12px 20px; display: flex; gap: 8px; }
+#copy-btn { flex: 1; padding: 10px; background: #1a2a4a; color: #aac; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
+#clear-btn { flex: 1; padding: 10px; background: #2a1a1a; color: #c88; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
+#copy-msg { text-align: center; font-size: 13px; color: #4c8; padding-bottom: 6px; height: 20px; }
+</style>
+</head>
+<body>
+<div id="tabs">
+  <div class="tab active" data-mode="normal">通常</div>
+  <div class="tab" data-mode="rush">ラッシュ中</div>
+</div>
+<div id="list-area">
+  <div id="sort-btns">
+    <div class="sbtn active" data-sort="new">新着順</div>
+    <div class="sbtn" data-sort="pattern">パターン順</div>
+    <div class="sbtn" data-sort="count">個数順</div>
+    <div class="sbtn" data-sort="result">結果別</div>
+  </div>
+  <div id="sort-label" style="font-size:13px;color:#666;margin-bottom:6px;">新着順</div>
+  <div id="list"></div>
+</div>
+<div id="copy-msg"></div>
+<div id="bottom-btns">
+  <button id="copy-btn">コピー</button>
+  <button id="clear-btn">データ削除</button>
+</div>
+<div id="input-area">
+  <div id="lamps"></div>
+  <div id="round-btns"></div>
+  <button id="record-btn">記録する</button>
+  <button id="reset-btn">ランプリセット</button>
+</div>
+
+<script>
+var ON_NUMS = ['❶','❷','❸','❹','❺','❻','❼','❽','❾'];
+var OFF_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+var ROUNDS_NORMAL = ['V','E','G','A','W'];
+var ROUNDS_RUSH = ['継続','転落','保留V','保留W'];
+var NUM_LAMPS = 9;
+var STORAGE_KEY = 'seg_v3';
+var mode = 'normal';
+var lamps = [0,0,0,0,0,0,0,0,0];
+var selectedRound = null;
+var sortType = 'new';
+var allData = { normal: [], rush: [] };
+
+function loadData() {
+  try {
+    var s = localStorage.getItem(STORAGE_KEY);
+    if (s) { allData = JSON.parse(s); }
+    if (!allData.normal) { allData.normal = []; }
+    if (!allData.rush) { allData.rush = []; }
+  } catch(e) { allData = { normal: [], rush: [] }; }
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(allData)); } catch(e) {}
+}
+
+function getRounds() {
+  return mode === 'normal' ? ROUNDS_NORMAL : ROUNDS_RUSH;
+}
+
+function getRawPattern() {
+  return lamps.join('');
+}
+
+function patternToNum(pat) {
+  return parseInt(pat, 2);
+}
+
+function renderLamps() {
+  var c = document.getElementById('lamps');
+  c.innerHTML = '';
+  for (var i = 0; i < NUM_LAMPS; i++) {
+    var el = document.createElement('div');
+    el.className = 'lamp' + (lamps[i] ? ' on' : '');
+    el.setAttribute('data-idx', i);
+    el.textContent = lamps[i] ? ON_NUMS[i] : OFF_NUMS[i];
+    c.appendChild(el);
+  }
+}
+
+function renderRoundBtns() {
+  var rounds = getRounds();
+  var c = document.getElementById('round-btns');
+  c.innerHTML = '';
+  for (var i = 0; i < rounds.length; i++) {
+    var el = document.createElement('button');
+    el.className = 'rbtn' + (selectedRound === rounds[i] ? ' selected' : '');
+    el.setAttribute('data-round', rounds[i]);
+    el.textContent = rounds[i];
+    c.appendChild(el);
+  }
+}
+
+function countOn(pat) {
+  var n = 0;
+  for (var i = 0; i < pat.length; i++) { if (pat[i] === '1') { n++; } }
+  return n;
+}
+
+function renderList() {
+  var arr = allData[mode].slice();
+  var rounds = getRounds();
+
+  if (sortType === 'new') {
+    arr.reverse();
+  } else if (sortType === 'pattern') {
+    arr.sort(function(a, b) { return patternToNum(a.pat) - patternToNum(b.pat); });
+  } else if (sortType === 'count') {
+    arr.sort(function(a, b) {
+      var ca = countOn(a.pat); var cb = countOn(b.pat);
+      if (ca !== cb) { return ca - cb; }
+      return patternToNum(a.pat) - patternToNum(b.pat);
+    });
+  } else if (sortType === 'result') {
+    arr.sort(function(a, b) {
+      var ra = rounds.indexOf(a.round);
+      var rb = rounds.indexOf(b.round);
+      if (ra !== rb) { return ra - rb; }
+      return patternToNum(a.pat) - patternToNum(b.pat);
+    });
+  }
+
+  var c = document.getElementById('list');
+  if (arr.length === 0) {
+    c.innerHTML = '<div style="text-align:center;color:#444;padding:20px;font-size:14px;">データなし</div>';
+    return;
+  }
+
+  var html = '';
+  var lastRound = null;
+  var lastCount = -1;
+  for (var i = 0; i < arr.length; i++) {
+    var d = arr[i];
+    if (sortType === 'result' && d.round !== lastRound) {
+      html += '<div style="font-size:14px;font-weight:bold;color:#f08;padding:8px 4px 4px;">' + d.round + '</div>';
+      lastRound = d.round;
+    }
+    if (sortType === 'count') {
+      var cnt = countOn(d.pat);
+      if (cnt !== lastCount) {
+        html += '<div style="font-size:14px;font-weight:bold;color:#f08;padding:8px 4px 4px;">' + cnt + '個点灯</div>';
+        lastCount = cnt;
+      }
+    }
+    html += '<div class="list-row"><div class="row-lamps">';
+    for (var j = 0; j < NUM_LAMPS; j++) {
+      var on = d.pat[j] === '1';
+      html += '<div class="rl ' + (on ? 'on' : 'off') + '">' + (on ? ON_NUMS[j] : OFF_NUMS[j]) + '</div>';
+    }
+    html += '</div><div class="row-result">' + d.round + '</div></div>';
+  }
+  c.innerHTML = html;
+}
+
+document.getElementById('tabs').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('tab')) { return; }
+  mode = el.getAttribute('data-mode');
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].className = 'tab' + (tabs[i].getAttribute('data-mode') === mode ? ' active' : '');
+  }
+  selectedRound = null;
+  lamps = [0,0,0,0,0,0,0,0,0];
+  renderLamps();
+  renderRoundBtns();
+  renderList();
+});
+
+document.getElementById('lamps').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('lamp')) { return; }
+  var idx = parseInt(el.getAttribute('data-idx'));
+  lamps[idx] = lamps[idx] ? 0 : 1;
+  renderLamps();
+});
+
+document.getElementById('round-btns').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('rbtn')) { return; }
+  selectedRound = el.getAttribute('data-round');
+  renderRoundBtns();
+});
+
+document.getElementById('record-btn').addEventListener('click', function() {
+  if (!selectedRound) { alert('結果を選択してください'); return; }
+  allData[mode].push({ pat: getRawPattern(), round: selectedRound });
+  saveData();
+  lamps = [0,0,0,0,0,0,0,0,0];
+  selectedRound = null;
+  renderLamps();
+  renderRoundBtns();
+  renderList();
+});
+
+document.getElementById('reset-btn').addEventListener('click', function() {
+  lamps = [0,0,0,0,0,0,0,0,0];
+  renderLamps();
+});
+
+document.getElementById('sort-btns').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('sbtn')) { return; }
+  sortType = el.getAttribute('data-sort');
+  var sbtns = document.querySelectorAll('.sbtn');
+  for (var i = 0; i < sbtns.length; i++) {
+    sbtns[i].className = 'sbtn' + (sbtns[i].getAttribute('data-sort') === sortType ? ' active' : '');
+  }
+  var labelMap = { 'new': '新着順', 'pattern': 'パターン順', 'count': '個数順', 'result': '結果別' };
+  document.getElementById('sort-label').textContent = labelMap[sortType];
+  renderList();
+});
+
+document.getElementById('copy-btn').addEventListener('click', function() {
+  var lines = ['モード\tパターン\t結果'];
+  var modes = ['normal', 'rush'];
+  var labels = { normal: '通常', rush: 'ラッシュ' };
+  for (var m = 0; m < modes.length; m++) {
+    var arr = allData[modes[m]];
+    for (var i = 0; i < arr.length; i++) {
+      var disp = '';
+      for (var j = 0; j < NUM_LAMPS; j++) {
+        disp += arr[i].pat[j] === '1' ? ON_NUMS[j] : OFF_NUMS[j];
+      }
+      lines.push(labels[modes[m]] + '\t' + disp + '\t' + arr[i].round);
+    }
+  }
+  var text = lines.join('\n');
+  var msg = document.getElementById('copy-msg');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      msg.textContent = 'コピーしました！';
+      setTimeout(function() { msg.textContent = ''; }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    msg.textContent = 'コピーしました！';
+    setTimeout(function() { msg.textContent = ''; }, 2000);
+  }
+});
+
+document.getElementById('clear-btn').addEventListener('click', function() {
+  var label = mode === 'normal' ? '通常' : 'ラッシュ中';
+  if (confirm(label + 'のデータを全削除しますか？')) {
+    allData[mode] = [];
+    saveData();
+    renderList();
+  }
+});
+
+loadData();
+renderLamps();
+renderRoundBtns();
+renderList();
+</script>
+</body>
+</html>
