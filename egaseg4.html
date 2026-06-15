@@ -27,6 +27,8 @@ body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; 
 .row-recorder { font-size: 11px; color: #88aacc; }
 .del-btn { margin-left: 6px; padding: 4px 7px; background: #3a1a1a; color: #c88; font-size: 12px; border: 1px solid #5a2a2a; border-radius: 4px; cursor: pointer; flex-shrink: 0; }
 .del-btn:active { background: #5a2020; }
+.recorder-box { border: 1px solid #333; border-radius: 10px; padding: 8px; margin-bottom: 10px; }
+.recorder-box-title { font-size: 13px; font-weight: bold; color: #88aacc; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #333; }
 .group-label { font-size: 14px; font-weight: bold; color: #f08; padding: 8px 4px 4px; }
 #bottom-btns { padding: 8px 12px 12px; display: flex; gap: 8px; }
 #copy-btn { flex: 1; padding: 10px; background: #1a2a4a; color: #aac; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
@@ -67,6 +69,7 @@ body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; 
     <div class="sbtn" data-sort="pattern">パターン順</div>
     <div class="sbtn" data-sort="count">個数順</div>
     <div class="sbtn" data-sort="result">結果別</div>
+    <div class="sbtn" data-sort="recorder">人別</div>
   </div>
   <div id="sort-label">新着順</div>
   <div id="list"></div>
@@ -178,7 +181,7 @@ function renderList() {
   // インデックス付きコピー
   var arr = [];
   for (var k = 0; k < src.length; k++) {
-    arr.push({ pat: src[k].pat, round: src[k].round, unsure: src[k].unsure, idx: k });
+    arr.push({ pat: src[k].pat, round: src[k].round, unsure: src[k].unsure, recorder: src[k].recorder, idx: k });
   }
   if (sortType === 'new') { arr.reverse(); }
   else if (sortType === 'pattern') {
@@ -195,6 +198,12 @@ function renderList() {
       if (ra !== rb) { return ra - rb; }
       return patternToNum(a.pat) - patternToNum(b.pat);
     });
+  } else if (sortType === 'recorder') {
+    arr.sort(function(a, b) {
+      var ra = a.recorder || ''; var rb = b.recorder || '';
+      if (ra !== rb) { return ra < rb ? -1 : 1; }
+      return patternToNum(a.pat) - patternToNum(b.pat);
+    });
   }
   var c = document.getElementById('list');
   if (arr.length === 0) {
@@ -202,7 +211,40 @@ function renderList() {
     return;
   }
   var html = '';
-  var lastRound = null; var lastCount = -1;
+
+  // 新着順は人別ボックス表示
+  if (sortType === 'new') {
+    // 人ごとにグループ化（登場順）
+    var recorderOrder = [];
+    var recorderMap = {};
+    for (var i = 0; i < arr.length; i++) {
+      var rec = arr[i].recorder || '（名前なし）';
+      if (!recorderMap[rec]) { recorderMap[rec] = []; recorderOrder.push(rec); }
+      recorderMap[rec].push(arr[i]);
+    }
+    for (var r = 0; r < recorderOrder.length; r++) {
+      var name = recorderOrder[r];
+      var rows = recorderMap[name];
+      html += '<div class="recorder-box">';
+      html += '<div class="recorder-box-title">' + name + '</div>';
+      for (var i = 0; i < rows.length; i++) {
+        var d = rows[i];
+        html += '<div class="list-row' + (d.unsure ? ' unsure' : '') + '"><div class="row-lamps">';
+        for (var j = 0; j < NUM_LAMPS; j++) {
+          var on = d.pat[j] === '1';
+          html += '<div class="rl ' + (on ? 'on' : 'off') + '">' + (on ? ON_NUMS[j] : OFF_NUMS[j]) + '</div>';
+        }
+        html += '</div><div class="row-right"><div class="row-result">' + d.round + '</div>';
+        if (d.unsure) { html += '<div class="row-unsure">自信なし</div>'; }
+        html += '</div><button class="del-btn" data-idx="' + d.idx + '">削</button></div>';
+      }
+      html += '</div>';
+    }
+    c.innerHTML = html;
+    return;
+  }
+
+  var lastRound = null; var lastCount = -1; var lastRecorder = null;
   for (var i = 0; i < arr.length; i++) {
     var d = arr[i];
     if (sortType === 'result' && d.round !== lastRound) {
@@ -216,15 +258,22 @@ function renderList() {
         lastCount = cnt;
       }
     }
+    if (sortType === 'recorder') {
+      var rec = d.recorder || '（名前なし）';
+      if (rec !== lastRecorder) {
+        html += '<div class="group-label">' + rec + '</div>';
+        lastRecorder = rec;
+      }
+    }
     html += '<div class="list-row' + (d.unsure ? ' unsure' : '') + '"><div class="row-lamps">';
     for (var j = 0; j < NUM_LAMPS; j++) {
       var on = d.pat[j] === '1';
       html += '<div class="rl ' + (on ? 'on' : 'off') + '">' + (on ? ON_NUMS[j] : OFF_NUMS[j]) + '</div>';
     }
     html += '</div><div class="row-right"><div class="row-result">' + d.round + '</div>';
-    if (d.unsure) { html += '<div class="row-unsure">自信なし</div>'; }
     if (d.recorder) { html += '<div class="row-recorder">' + d.recorder + '</div>'; }
-    html += '</div><button class="del-btn" data-idx="' + d.idx + '">削除</button></div>';
+    if (d.unsure) { html += '<div class="row-unsure">自信なし</div>'; }
+    html += '</div><button class="del-btn" data-idx="' + d.idx + '">削</button></div>';
   }
   c.innerHTML = html;
 }
@@ -291,7 +340,7 @@ document.getElementById('sort-btns').addEventListener('click', function(e) {
   for (var i = 0; i < sbtns.length; i++) {
     sbtns[i].className = 'sbtn' + (sbtns[i].getAttribute('data-sort') === sortType ? ' active' : '');
   }
-  var labelMap = { 'new': '新着順', 'pattern': 'パターン順', 'count': '個数順', 'result': '結果別' };
+  var labelMap = { 'new': '新着順', 'pattern': 'パターン順', 'count': '個数順', 'result': '結果別', 'recorder': '人別' };
   document.getElementById('sort-label').textContent = labelMap[sortType];
   renderList();
 });
