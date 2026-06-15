@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>セグ記録</title>
+<style>
+* { box-sizing: border-box; touch-action: manipulation; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; padding-bottom: 700px; -webkit-text-size-adjust: 100%; }
+#tabs { display: flex; overflow-x: auto; border-bottom: 2px solid #333; -webkit-overflow-scrolling: touch; }
+.tab { flex: 0 0 auto; padding: 10px 14px; font-size: 13px; font-weight: bold; background: #1a1a1a; color: #666; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
+.tab.active { background: #222; color: #fff; border-bottom: 3px solid #f08; }
+#list-area { padding: 10px 12px; }
+#sort-btns { display: flex; gap: 6px; margin-bottom: 6px; }
+.sbtn { flex: 1; padding: 7px 4px; font-size: 12px; border: 2px solid #333; border-radius: 6px; background: #1a1a1a; color: #777; cursor: pointer; text-align: center; }
+.sbtn.active { border-color: #f08; color: #fff; background: #2a1020; }
+#sort-label { font-size: 13px; color: #666; margin-bottom: 6px; }
+.list-row { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 8px; background: #1a1a1a; margin-bottom: 6px; }
+.list-row.unsure { background: #1e1a08; }
+.row-lamps { display: flex; gap: 2px; }
+.rl { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+.rl.on { background: #e0193a; color: #fff; }
+.rl.off { background: #222; color: #333; border: 1px solid #2a2a2a; }
+.row-right { margin-left: auto; text-align: right; }
+.row-result { font-size: 15px; font-weight: bold; color: #f08; }
+.row-unsure { font-size: 11px; color: #a89030; }
+.group-label { font-size: 14px; font-weight: bold; color: #f08; padding: 8px 4px 4px; }
+#bottom-btns { padding: 8px 12px 12px; display: flex; gap: 8px; }
+#copy-btn { flex: 1; padding: 10px; background: #1a2a4a; color: #aac; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
+#clear-btn { flex: 1; padding: 10px; background: #2a1a1a; color: #c88; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
+#copy-msg { text-align: center; font-size: 13px; color: #4c8; height: 20px; }
+
+/* 入力エリア */
+#input-area { position: fixed; bottom: 60px; left: 0; right: 0; background: rgba(26,26,26,0.75); border-top: 2px solid #333; border-bottom: 2px solid #333; z-index: 10; padding: 10px 12px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+#input-inner { display: flex; gap: 10px; align-items: flex-end; }
+
+/* 左列：ランプ＋記録ボタン */
+#lamps-col { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 50px; }
+#lamps-top { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+#lamps-mid { display: flex; flex-direction: column; gap: 4px; align-items: center; border: 2px solid #555; border-radius: 10px; padding: 4px; }
+#lamps-bot { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.lamp { width: 42px; height: 42px; border-radius: 50%; background: #222; border: 2px solid #444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #555; user-select: none; }
+.lamp.on { background: #e0193a; border-color: #ff4060; color: #fff; font-weight: bold; }
+#pat-display { font-size: 11px; color: #777; text-align: center; padding: 2px 0; }
+#record-btn { width: 100%; padding: 8px 0; background: #c01030; color: #fff; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+#record-btn:active { background: #900; }
+#unsure-btn { width: 100%; padding: 7px 0; background: #5a4a10; color: #ddb; font-size: 11px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+#unsure-btn:active { background: #3a3008; }
+#reset-btn { width: 100%; padding: 6px 0; background: #333; color: #aaa; font-size: 11px; border: none; border-radius: 6px; cursor: pointer; }
+
+/* 右列：結果ボタン */
+#right-col { flex: 1; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
+#round-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.rbtn { flex: 1; min-width: 44px; height: 44px; border-radius: 6px; border: 2px solid #444; background: #222; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; user-select: none; }
+.rbtn.selected { border-color: #f08; background: #3a1020; color: #fff; }
+
+/* 開閉ボタン */
+#toggle-btn { position: fixed; left: 12px; bottom: calc(60px - 26px); width: 72px; height: 26px; background: #333; border: 1px solid #555; color: #aaa; font-size: 12px; cursor: pointer; z-index: 11; border-radius: 6px 6px 0 0; border-bottom: none; }
+</style>
+</head>
+<body>
+<div id="tabs">
+  <div class="tab active" data-mode="n1a">通常1a</div>
+  <div class="tab" data-mode="n1b">通常1b</div>
+  <div class="tab" data-mode="r2a">ラッシュ2a</div>
+  <div class="tab" data-mode="r2b">ラッシュ2b</div>
+  <div class="tab" data-mode="r2c">ラッシュ2c</div>
+</div>
+<div id="list-area">
+  <div id="sort-btns">
+    <div class="sbtn active" data-sort="new">新着順</div>
+    <div class="sbtn" data-sort="pattern">パターン順</div>
+    <div class="sbtn" data-sort="count">個数順</div>
+    <div class="sbtn" data-sort="result">結果別</div>
+  </div>
+  <div id="sort-label">新着順</div>
+  <div id="list"></div>
+</div>
+<div id="copy-msg"></div>
+<div id="bottom-btns">
+  <button id="copy-btn">コピー</button>
+  <button id="clear-btn">データ削除</button>
+</div>
+
+<button id="toggle-btn">入力を隠す</button>
+<div id="input-area">
+  <div id="input-inner">
+    <div id="lamps-col">
+      <div id="lamps-top"></div>
+      <div id="lamps-mid"></div>
+      <div id="lamps-bot"></div>
+      <div id="pat-display">0個/なし</div>
+      <button id="record-btn">記録する</button>
+      <button id="unsure-btn">自信なし</button>
+      <button id="reset-btn">リセット</button>
+    </div>
+    <div id="right-col">
+      <div id="round-btns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var ON_NUMS = ['❶','❷','❸','❹','❺','❻','❼','❽'];
+var OFF_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧'];
+var NUM_LAMPS = 8;
+var STORAGE_KEY = 'seg_v5';
+var MODES = {
+  n1a:  { label: '通常1a',    rounds: ['E','G','A','V','VV'] },
+  n1b:  { label: '通常1b',    rounds: ['E','G','A','V','VV'] },
+  r2a:  { label: 'ラッシュ2a', rounds: ['継続','転落'] },
+  r2b:  { label: 'ラッシュ2b', rounds: ['継続','転落'] },
+  r2c:  { label: 'ラッシュ2c', rounds: ['保留V','保留VV'] }
+};
+var mode = 'n1a';
+var lamps = [0,0,0,0,0,0,0,0];
+var selectedRound = null;
+var sortType = 'new';
+var allData = {};
+
+function initData() {
+  var keys = Object.keys(MODES);
+  for (var i = 0; i < keys.length; i++) {
+    if (!allData[keys[i]]) { allData[keys[i]] = []; }
+  }
+}
+function loadData() {
+  try {
+    var s = localStorage.getItem(STORAGE_KEY);
+    if (s) { allData = JSON.parse(s); }
+  } catch(e) { allData = {}; }
+  initData();
+}
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(allData)); } catch(e) {}
+}
+function getRounds() { return MODES[mode].rounds; }
+function getRawPattern() { return lamps.join(''); }
+function patternToNum(pat) { return parseInt(pat, 2); }
+function countOn(pat) {
+  var n = 0;
+  for (var i = 0; i < pat.length; i++) { if (pat[i] === '1') { n++; } }
+  return n;
+}
+function getLitNums() {
+  var lit = [];
+  for (var i = 0; i < NUM_LAMPS; i++) { if (lamps[i]) { lit.push(i + 1); } }
+  return lit;
+}
+
+function renderLamps() {
+  var top = document.getElementById('lamps-top');
+  var mid = document.getElementById('lamps-mid');
+  var bot = document.getElementById('lamps-bot');
+  top.innerHTML = ''; mid.innerHTML = ''; bot.innerHTML = '';
+  for (var i = NUM_LAMPS - 1; i >= 0; i--) {
+    var el = document.createElement('div');
+    el.className = 'lamp' + (lamps[i] ? ' on' : '');
+    el.setAttribute('data-idx', i);
+    el.textContent = lamps[i] ? ON_NUMS[i] : OFF_NUMS[i];
+    if (i === 7) { top.appendChild(el); }
+    else if (i >= 3) { mid.appendChild(el); }
+    else { bot.appendChild(el); }
+  }
+  var lit = getLitNums();
+  var cnt = lit.length;
+  document.getElementById('pat-display').textContent = cnt + '個/' + (cnt === 0 ? 'なし' : lit.join(''));
+}
+
+function renderRoundBtns() {
+  var rounds = getRounds();
+  var c = document.getElementById('round-btns');
+  c.innerHTML = '';
+  for (var i = 0; i < rounds.length; i++) {
+    var el = document.createElement('button');
+    el.className = 'rbtn' + (selectedRound === rounds[i] ? ' selected' : '');
+    el.setAttribute('data-round', rounds[i]);
+    el.textContent = rounds[i];
+    c.appendChild(el);
+  }
+}
+
+function renderList() {
+  var arr = allData[mode].slice();
+  var rounds = getRounds();
+  if (sortType === 'new') { arr.reverse(); }
+  else if (sortType === 'pattern') {
+    arr.sort(function(a, b) { return patternToNum(a.pat) - patternToNum(b.pat); });
+  } else if (sortType === 'count') {
+    arr.sort(function(a, b) {
+      var ca = countOn(a.pat); var cb = countOn(b.pat);
+      if (ca !== cb) { return ca - cb; }
+      return patternToNum(a.pat) - patternToNum(b.pat);
+    });
+  } else if (sortType === 'result') {
+    arr.sort(function(a, b) {
+      var ra = rounds.indexOf(a.round); var rb = rounds.indexOf(b.round);
+      if (ra !== rb) { return ra - rb; }
+      return patternToNum(a.pat) - patternToNum(b.pat);
+    });
+  }
+  var c = document.getElementById('list');
+  if (arr.length === 0) {
+    c.innerHTML = '<div style="text-align:center;color:#444;padding:20px;font-size:14px;">データなし</div>';
+    return;
+  }
+  var html = '';
+  var lastRound = null; var lastCount = -1;
+  for (var i = 0; i < arr.length; i++) {
+    var d = arr[i];
+    if (sortType === 'result' && d.round !== lastRound) {
+      html += '<div class="group-label">' + d.round + '</div>';
+      lastRound = d.round;
+    }
+    if (sortType === 'count') {
+      var cnt = countOn(d.pat);
+      if (cnt !== lastCount) {
+        html += '<div class="group-label">' + cnt + '個点灯</div>';
+        lastCount = cnt;
+      }
+    }
+    html += '<div class="list-row' + (d.unsure ? ' unsure' : '') + '"><div class="row-lamps">';
+    for (var j = 0; j < NUM_LAMPS; j++) {
+      var on = d.pat[j] === '1';
+      html += '<div class="rl ' + (on ? 'on' : 'off') + '">' + (on ? ON_NUMS[j] : OFF_NUMS[j]) + '</div>';
+    }
+    html += '</div><div class="row-right"><div class="row-result">' + d.round + '</div>';
+    if (d.unsure) { html += '<div class="row-unsure">自信なし</div>'; }
+    html += '</div></div>';
+  }
+  c.innerHTML = html;
+}
+
+function doRecord(unsure) {
+  if (!selectedRound) { alert('結果を選択してください'); return; }
+  allData[mode].push({ pat: getRawPattern(), round: selectedRound, unsure: unsure ? true : false });
+  saveData();
+  lamps = [0,0,0,0,0,0,0,0];
+  selectedRound = null;
+  renderLamps(); renderRoundBtns(); renderList();
+}
+
+document.getElementById('tabs').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('tab')) { return; }
+  mode = el.getAttribute('data-mode');
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].className = 'tab' + (tabs[i].getAttribute('data-mode') === mode ? ' active' : '');
+  }
+  selectedRound = null;
+  lamps = [0,0,0,0,0,0,0,0];
+  renderLamps(); renderRoundBtns(); renderList();
+});
+
+document.getElementById('lamps-col').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('lamp')) { return; }
+  var idx = parseInt(el.getAttribute('data-idx'));
+  lamps[idx] = lamps[idx] ? 0 : 1;
+  renderLamps();
+});
+
+document.getElementById('round-btns').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('rbtn')) { return; }
+  selectedRound = el.getAttribute('data-round');
+  renderRoundBtns();
+});
+
+document.getElementById('record-btn').addEventListener('click', function() { doRecord(false); });
+document.getElementById('unsure-btn').addEventListener('click', function() { doRecord(true); });
+document.getElementById('reset-btn').addEventListener('click', function() {
+  lamps = [0,0,0,0,0,0,0,0]; renderLamps();
+});
+
+document.getElementById('sort-btns').addEventListener('click', function(e) {
+  var el = e.target;
+  if (!el.classList.contains('sbtn')) { return; }
+  sortType = el.getAttribute('data-sort');
+  var sbtns = document.querySelectorAll('.sbtn');
+  for (var i = 0; i < sbtns.length; i++) {
+    sbtns[i].className = 'sbtn' + (sbtns[i].getAttribute('data-sort') === sortType ? ' active' : '');
+  }
+  var labelMap = { 'new': '新着順', 'pattern': 'パターン順', 'count': '個数順', 'result': '結果別' };
+  document.getElementById('sort-label').textContent = labelMap[sortType];
+  renderList();
+});
+
+document.getElementById('copy-btn').addEventListener('click', function() {
+  var lines = ['タブ\tパターン\t結果\t自信なし'];
+  var keys = Object.keys(MODES);
+  for (var m = 0; m < keys.length; m++) {
+    var arr = allData[keys[m]];
+    for (var i = 0; i < arr.length; i++) {
+      var d = arr[i]; var disp = '';
+      for (var j = 0; j < NUM_LAMPS; j++) {
+        disp += d.pat[j] === '1' ? ON_NUMS[j] : OFF_NUMS[j];
+      }
+      lines.push(MODES[keys[m]].label + '\t' + disp + '\t' + d.round + '\t' + (d.unsure ? '自信なし' : ''));
+    }
+  }
+  var text = lines.join('\n');
+  var msg = document.getElementById('copy-msg');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      msg.textContent = 'コピーしました！';
+      setTimeout(function() { msg.textContent = ''; }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    msg.textContent = 'コピーしました！';
+    setTimeout(function() { msg.textContent = ''; }, 2000);
+  }
+});
+
+document.getElementById('clear-btn').addEventListener('click', function() {
+  if (confirm(MODES[mode].label + 'のデータを全削除しますか？')) {
+    allData[mode] = []; saveData(); renderList();
+  }
+});
+
+var panelOpen = true;
+document.getElementById('toggle-btn').addEventListener('click', function() {
+  panelOpen = !panelOpen;
+  var panel = document.getElementById('input-area');
+  var btn = document.getElementById('toggle-btn');
+  if (panelOpen) {
+    panel.style.display = 'block';
+    btn.textContent = '入力を隠す';
+    btn.style.bottom = 'calc(60px - 26px)';
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '入力を表示';
+    btn.style.bottom = '8px';
+  }
+});
+
+loadData(); renderLamps(); renderRoundBtns(); renderList();
+</script>
+</body>
+</html>
