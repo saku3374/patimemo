@@ -7,10 +7,11 @@
 <title>セグ記録</title>
 <style>
 * { box-sizing: border-box; touch-action: manipulation; margin: 0; padding: 0; }
-body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; padding-bottom: 700px; -webkit-text-size-adjust: 100%; }
+body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; padding-bottom: 700px; padding-left: 148px; -webkit-text-size-adjust: 100%; }
 #tabs { display: flex; overflow-x: auto; border-bottom: 2px solid #333; -webkit-overflow-scrolling: touch; }
 .tab { flex: 0 0 auto; padding: 10px 14px; font-size: 13px; font-weight: bold; background: #1a1a1a; color: #666; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
 .tab.active { background: #222; color: #fff; border-bottom: 3px solid #f08; }
+#toggle-btn { position: fixed; left: 0; bottom: 30px; width: 140px; height: 28px; background: #333; border: 1px solid #555; border-bottom: none; color: #aaa; font-size: 12px; cursor: pointer; z-index: 11; border-radius: 6px 6px 0 0; }
 #list-area { padding: 10px 12px; }
 #sort-btns { display: flex; gap: 6px; margin-bottom: 6px; }
 .sbtn { flex: 1; padding: 7px 4px; font-size: 12px; border: 2px solid #333; border-radius: 6px; background: #1a1a1a; color: #777; cursor: pointer; text-align: center; }
@@ -31,32 +32,22 @@ body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; 
 #clear-btn { flex: 1; padding: 10px; background: #2a1a1a; color: #c88; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; }
 #copy-msg { text-align: center; font-size: 13px; color: #4c8; height: 20px; }
 
-/* 入力エリア */
-#input-area { position: fixed; bottom: 60px; left: 0; right: 0; background: rgba(26,26,26,0.75); border-top: 2px solid #333; border-bottom: 2px solid #333; z-index: 10; padding: 10px 12px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-#input-inner { display: flex; gap: 10px; align-items: flex-end; }
-
-/* 左列：ランプ＋記録ボタン */
-#lamps-col { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 50px; }
+#input-area { position: fixed; bottom: 60px; left: 0; width: 140px; padding: 10px 8px 12px; background: rgba(26,26,26,0.85); border-right: 2px solid #333; border-top: 2px solid #333; z-index: 10; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+#lamps-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 #lamps-top { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 #lamps-mid { display: flex; flex-direction: column; gap: 4px; align-items: center; border: 2px solid #555; border-radius: 10px; padding: 4px; }
 #lamps-bot { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .lamp { width: 42px; height: 42px; border-radius: 50%; background: #222; border: 2px solid #444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #555; user-select: none; }
 .lamp.on { background: #e0193a; border-color: #ff4060; color: #fff; font-weight: bold; }
 #pat-display { font-size: 11px; color: #777; text-align: center; padding: 2px 0; }
+#round-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 100%; margin-bottom: 4px; }
+.rbtn { height: 38px; border-radius: 6px; border: 2px solid #444; background: #222; color: #aaa; font-size: 13px; font-weight: bold; cursor: pointer; user-select: none; }
+.rbtn.selected { border-color: #f08; background: #3a1020; color: #fff; }
 #record-btn { width: 100%; padding: 8px 0; background: #c01030; color: #fff; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
 #record-btn:active { background: #900; }
 #unsure-btn { width: 100%; padding: 7px 0; background: #5a4a10; color: #ddb; font-size: 11px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
 #unsure-btn:active { background: #3a3008; }
 #reset-btn { width: 100%; padding: 6px 0; background: #333; color: #aaa; font-size: 11px; border: none; border-radius: 6px; cursor: pointer; }
-
-/* 右列：結果ボタン */
-#right-col { flex: 1; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; }
-#round-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.rbtn { flex: 1; min-width: 44px; height: 44px; border-radius: 6px; border: 2px solid #444; background: #222; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; user-select: none; }
-.rbtn.selected { border-color: #f08; background: #3a1020; color: #fff; }
-
-/* 開閉ボタン */
-#toggle-btn { position: fixed; left: 12px; bottom: calc(60px - 26px); width: 72px; height: 26px; background: #333; border: 1px solid #555; color: #aaa; font-size: 12px; cursor: pointer; z-index: 11; border-radius: 6px 6px 0 0; border-bottom: none; }
 </style>
 </head>
 <body>
@@ -85,19 +76,15 @@ body { font-family: sans-serif; background: #111; color: #eee; font-size: 16px; 
 
 <button id="toggle-btn">入力を隠す</button>
 <div id="input-area">
-  <div id="input-inner">
-    <div id="lamps-col">
-      <div id="lamps-top"></div>
-      <div id="lamps-mid"></div>
-      <div id="lamps-bot"></div>
-      <div id="pat-display">0個/なし</div>
-      <button id="record-btn">記録する</button>
-      <button id="unsure-btn">自信なし</button>
-      <button id="reset-btn">リセット</button>
-    </div>
-    <div id="right-col">
-      <div id="round-btns"></div>
-    </div>
+  <div id="lamps-col">
+    <div id="lamps-top"></div>
+    <div id="lamps-mid"></div>
+    <div id="lamps-bot"></div>
+    <div id="pat-display">0個/なし</div>
+    <div id="round-btns"></div>
+    <button id="record-btn">記録する</button>
+    <button id="unsure-btn">自信なし</button>
+    <button id="reset-btn">リセット</button>
   </div>
 </div>
 
@@ -330,12 +317,14 @@ document.getElementById('toggle-btn').addEventListener('click', function() {
   var btn = document.getElementById('toggle-btn');
   if (panelOpen) {
     panel.style.display = 'block';
+    document.body.style.paddingLeft = '148px';
     btn.textContent = '入力を隠す';
-    btn.style.bottom = 'calc(60px - 26px)';
+    btn.style.width = '140px';
   } else {
     panel.style.display = 'none';
+    document.body.style.paddingLeft = '0';
     btn.textContent = '入力を表示';
-    btn.style.bottom = '8px';
+    btn.style.width = '80px';
   }
 });
 
