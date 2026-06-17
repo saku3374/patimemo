@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>羽根モノカウンター</title>
+<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}body{margin:0;padding:0;background:#f0f1f3;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#222;}#stickyTop{position:sticky;top:0;z-index:20;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.12);padding:6px 8px 8px;}.tabBarRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;}.tabBtns{display:flex;gap:6px;}.tabBtn{padding:7px 10px;border-radius:8px;border:1px solid #ccc;background:#f3f4f6;font-size:11.5px;font-weight:bold;color:#555;}.tabBtn.tabActive{background:#2563eb;color:#fff;border-color:#2563eb;}.modeToggle{padding:7px 10px;border-radius:16px;border:1px solid #ccc;background:#e5e7eb;font-size:11.5px;font-weight:bold;color:#444;white-space:nowrap;}.modeToggle.modeOn{background:#fee2e2;border-color:#ef4444;color:#b91c1c;}.totalPanel{background:#fff7e1;border:1px solid #f3d98b;border-radius:8px;padding:6px 6px 4px;}.totalTitle{font-size:12px;font-weight:bold;color:#92660c;margin-bottom:4px;}#app{padding:8px;padding-bottom:8px;}.session{background:#fff;border:1px solid #e2e4e8;border-radius:8px;padding:8px;margin-bottom:12px;}.session.confirmedSession{background:#f4f5f6;opacity:0.85;}.sessionHeader{font-size:12px;font-weight:bold;margin-bottom:6px;color:#555;}.badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:bold;}.badgeActive{background:#dcfce7;color:#15803d;}.badgeDone{background:#e5e7eb;color:#555;}.row6{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;}.row7{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}.col{text-align:center;}.colLabel{font-size:12px;font-weight:bold;line-height:1.1;}.colSub{font-size:8.5px;color:#777;line-height:1.1;height:11px;overflow:hidden;}.colValue,.colValueStatic{margin-top:2px;border-radius:6px;padding:7px 0;font-weight:bold;}.colValue{background:#f8f9fb;border:1px solid #d8dadf;font-size:16px;}.colValueStatic{background:#eef0f3;font-size:15px;color:#444;}.btnRow{margin-top:4px;}.pmBtn{height:42px;width:100%;font-size:20px;font-weight:bold;border:none;border-radius:6px;background:#bbf7d0;color:#166534;padding:0;margin-top:3px;}.pmBtn.minusActive{background:#fecaca;color:#991b1b;}.probRow{margin-top:5px;}.probCell{font-size:9.5px;color:#666;line-height:1.25;min-height:24px;}.confirmBtn{display:block;width:100%;margin-top:8px;padding:13px 0;font-size:16px;font-weight:bold;color:#fff;background:#2563eb;border:none;border-radius:8px;}.undoBtn{display:block;width:100%;margin-top:8px;padding:8px 0;font-size:12px;color:#888;background:none;border:1px dashed #ccc;border-radius:8px;}.ncCol7{background:#fbfcfd;border:1px solid #e6e8eb;border-radius:7px;padding:5px 2px 6px;display:flex;flex-direction:column;}.ncCol7 .colLabel{font-size:15px;text-align:center;margin-bottom:5px;padding-bottom:3px;}.ncSubItem{margin-bottom:5px;}.ncSubLabel{font-size:8px;color:#777;line-height:1.15;margin-bottom:1px;min-height:10px;text-align:center;}.ncCol7 .colValue,.ncCol7 .colValueStatic{font-size:12.5px;padding:5px 0;margin-top:0;}.ncCol7 .pmBtn{height:32px;font-size:15px;margin-top:2px;}.ncStat{margin-top:2px;padding-top:5px;border-top:1px solid #eceef0;font-size:8px;line-height:1.4;color:#666;text-align:center;min-height:30px;}.footerArea{text-align:center;padding:10px;display:flex;justify-content:center;gap:14px;}.resetLink{font-size:11px;color:#aaa;border:none;background:none;padding:6px;}.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:100;}.numpadBox{background:#fff;border-radius:14px;padding:14px;width:84%;max-width:320px;}.numpadTitle{font-size:14px;font-weight:bold;text-align:center;margin-bottom:6px;color:#333;}.numpadDisplay{font-size:30px;font-weight:bold;text-align:right;padding:8px 10px;background:#f3f4f6;border-radius:8px;margin-bottom:10px;letter-spacing:1px;}.numpadGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}.numpadGrid button{height:52px;font-size:20px;font-weight:bold;border:none;border-radius:8px;background:#eef0f3;color:#222;}.numpadGrid button.wide{background:#e5e7eb;font-size:16px;}.numpadActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}.numpadActions button{height:46px;font-size:15px;font-weight:bold;border:none;border-radius:8px;}.numpadActions .cancelBtn{background:#e5e7eb;color:#555;}.numpadActions .okBtn{background:#2563eb;color:#fff;}.slotBarRow{display:flex;align-items:center;gap:6px;margin-bottom:4px;}.slotBtn{flex:1;text-align:left;padding:7px 10px;border-radius:8px;border:1px solid #dde0e4;background:#f8f9fb;font-size:11.5px;font-weight:bold;color:#444;}.exportBtnSmall{padding:7px 10px;border-radius:8px;border:1px solid #93c5fd;background:#eff6ff;font-size:11px;font-weight:bold;color:#1d4ed8;white-space:nowrap;}.slotListBox{max-height:48vh;overflow-y:auto;margin:8px 0;}.slotRow{display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid #eee;}.slotRow.slotActive{background:#eff6ff;}.slotNameBtn{flex:1;text-align:left;padding:9px 8px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:12.5px;font-weight:bold;color:#333;}.slotRow.slotActive .slotNameBtn{border-color:#2563eb;color:#1d4ed8;}.slotMiniBtn{padding:7px 7px;border-radius:6px;border:1px solid #ddd;background:#f3f4f6;font-size:10.5px;color:#555;white-space:nowrap;}.slotMiniBtn.slotDel{color:#b91c1c;border-color:#fecaca;background:#fff5f5;}.fullBtn{display:block;width:100%;height:42px;border-radius:8px;margin-top:8px;border:none;background:#e5e7eb;color:#555;font-size:15px;font-weight:bold;}.exportBox{width:92%;max-width:380px;}.exportTextarea{width:100%;height:230px;font-size:10.5px;line-height:1.5;padding:8px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-family:monospace;resize:none;margin-bottom:8px;}</style>
+</head>
+<body>
+<div id="stickyTop"></div>
+<div id="app"></div>
+<div class="footerArea">
+<button class="resetLink" onclick="resetAll()">外しカウントデータ削除</button>
+<button class="resetLink" onclick="resetNormal()">通常カウントデータ削除</button>
+</div>
+<div id="numpadOverlay" class="overlay">
+<div class="numpadBox">
+<div class="numpadTitle" id="numpadTitle"></div>
+<div class="numpadDisplay" id="numpadDisplay">0</div>
+<div class="numpadGrid">
+<button onclick="numpadPress('7')">7</button>
+<button onclick="numpadPress('8')">8</button>
+<button onclick="numpadPress('9')">9</button>
+<button onclick="numpadPress('4')">4</button>
+<button onclick="numpadPress('5')">5</button>
+<button onclick="numpadPress('6')">6</button>
+<button onclick="numpadPress('1')">1</button>
+<button onclick="numpadPress('2')">2</button>
+<button onclick="numpadPress('3')">3</button>
+<button class="wide" onclick="numpadClear()">C</button>
+<button onclick="numpadPress('0')">0</button>
+<button class="wide" onclick="numpadBackspace()">⌫</button>
+</div>
+<div class="numpadActions">
+<button class="cancelBtn" onclick="numpadCancel()">キャンセル</button>
+<button class="okBtn" onclick="numpadOK()">確定</button>
+</div>
+</div>
+</div>
+<div id="slotOverlay" class="overlay">
+<div class="numpadBox">
+<div class="numpadTitle">スロット管理</div>
+<div id="slotList" class="slotListBox"></div>
+<button class="confirmBtn" onclick="addSlot()">＋ 新規スロット</button>
+<button class="cancelBtn fullBtn" onclick="closeSlotManager()">閉じる</button>
+</div>
+</div>
+<div id="exportOverlay" class="overlay">
+<div class="numpadBox exportBox">
+<div class="numpadTitle">データ書き出し（<span id="exportSlotName"></span>）</div>
+<textarea id="exportArea" class="exportTextarea" readonly></textarea>
+<div class="numpadActions">
+<button class="cancelBtn" onclick="closeExport()">閉じる</button>
+<button class="okBtn" id="copyBtn" onclick="copyExport()">コピーする</button>
+</div>
+</div>
+</div>
+<script>
+var minusMode = false;
+var editTarget = 'hane';
+var editIdx = -1;
+var editKey = '';
+var editBuffer = '0';
+var currentTab = 'hane';
+function pct(num, den){
+if(!den || den<=0){ return '－'; }
+return (num/den*100).toFixed(2) + '%';
+}
+function ratioStr(num, den){
+if(!den || den<=0){ return '－'; }
+return '1/' + (num/den).toFixed(2);
+}
+function saveTab(){
+saveCurrentSlotData();
+}
+function switchTab(t){
+currentTab = t;
+saveTab();
+render();
+window.scrollTo(0,0);
+}
+function toggleMinusMode(){
+minusMode = !minusMode;
+render();
+}
+var slots = [];
+var activeSlotId = null;
+function genId(){
+return 's' + Date.now() + Math.floor(Math.random()*10000);
+}
+function findSlotById(id){
+for(var i=0;i<slots.length;i++){
+if(slots[i].id === id){ return slots[i]; }
+}
+return null;
+}
+function loadSlots(){
+try{
+var raw = localStorage.getItem('hm_slots');
+if(raw){
+var arr = JSON.parse(raw);
+if(arr && arr.length){ return arr; }
+}
+}catch(e){}
+return null;
+}
+function saveSlots(){
+try{ localStorage.setItem('hm_slots', JSON.stringify(slots)); }catch(e){}
+}
+function saveActiveSlotIdOnly(){
+try{ localStorage.setItem('hm_active_slot', activeSlotId); }catch(e){}
+}
+function loadSlotDataById(id){
+try{
+var raw = localStorage.getItem('hm_data_' + id);
+if(raw){ return JSON.parse(raw); }
+}catch(e){}
+return null;
+}
+function saveCurrentSlotData(){
+try{
+localStorage.setItem('hm_data_' + activeSlotId, JSON.stringify({sessions:sessions, ncSessions:ncSessions, currentTab:currentTab}));
+}catch(e){}
+}
+function initData(){
+var loadedSlots = loadSlots();
+if(!loadedSlots){
+activeSlotId = genId();
+slots = [{id:activeSlotId, name:'スロット1'}];
+sessions = loadOldSessions();
+ncSessions = loadOldNcSessions();
+currentTab = 'hane';
+saveSlots();
+saveActiveSlotIdOnly();
+saveCurrentSlotData();
+} else {
+slots = loadedSlots;
+var savedActive = null;
+try{ savedActive = localStorage.getItem('hm_active_slot'); }catch(e){}
+activeSlotId = (savedActive && findSlotById(savedActive)) ? savedActive : slots[0].id;
+saveActiveSlotIdOnly();
+applySlotData(loadSlotDataById(activeSlotId));
+}
+}
+function currentSlotName(){
+var sl = findSlotById(activeSlotId);
+return sl ? sl.name : 'スロット';
+}
+function renderSlotManager(){
+var html = '';
+for(var i=0;i<slots.length;i++){
+var sl = slots[i];
+var activeClass = (sl.id === activeSlotId) ? ' slotActive' : '';
+html += '<div class="slotRow' + activeClass + '">';
+html += '<button class="slotNameBtn" onclick="switchSlot(\'' + sl.id + '\')">' + sl.name + (sl.id === activeSlotId ? '（現在）' : '') + '</button>';
+html += '<button class="slotMiniBtn" onclick="renameSlot(\'' + sl.id + '\')">名前変更</button>';
+if(slots.length > 1){
+html += '<button class="slotMiniBtn slotDel" onclick="deleteSlot(\'' + sl.id + '\')">削除</button>';
+}
+html += '</div>';
+}
+document.getElementById('slotList').innerHTML = html;
+}
+function openSlotManager(){
+renderSlotManager();
+document.getElementById('slotOverlay').style.display = 'flex';
+}
+function closeSlotManager(){
+document.getElementById('slotOverlay').style.display = 'none';
+}
+function applySlotData(data){
+sessions = (data && data.sessions) ? data.sessions : [{vals:emptyVals(), confirmed:false}];
+ncSessions = (data && data.ncSessions) ? data.ncSessions : [{vals:emptyNcVals(), confirmed:false}];
+currentTab = (data && data.currentTab) ? data.currentTab : 'hane';
+}
+function switchSlot(id){
+if(id === activeSlotId){ closeSlotManager(); return; }
+saveCurrentSlotData();
+activeSlotId = id;
+saveActiveSlotIdOnly();
+applySlotData(loadSlotDataById(id));
+closeSlotManager();
+render();
+}
+function addSlot(){
+var name = prompt('スロット名', '');
+if(name === null){ return; }
+name = name.replace(/^\s+|\s+$/g, '');
+if(name === ''){ name = 'スロット' + (slots.length + 1); }
+saveCurrentSlotData();
+var id = genId();
+slots.push({id:id, name:name});
+saveSlots();
+activeSlotId = id;
+saveActiveSlotIdOnly();
+sessions = [{vals:emptyVals(), confirmed:false}];
+ncSessions = [{vals:emptyNcVals(), confirmed:false}];
+currentTab = 'hane';
+saveCurrentSlotData();
+renderSlotManager();
+render();
+}
+function renameSlot(id){
+var sl = findSlotById(id);
+if(!sl){ return; }
+var name = prompt('スロット名を変更', sl.name);
+if(name === null){ return; }
+name = name.replace(/^\s+|\s+$/g, '');
+if(name === ''){ return; }
+sl.name = name;
+saveSlots();
+renderSlotManager();
+render();
+}
+function deleteSlot(id){
+if(slots.length <= 1){ return; }
+if(!confirm('このスロットを削除しますか？')){ return; }
+var newSlots = [];
+for(var i=0;i<slots.length;i++){
+if(slots[i].id !== id){ newSlots.push(slots[i]); }
+}
+slots = newSlots;
+saveSlots();
+try{ localStorage.removeItem('hm_data_' + id); }catch(e){}
+if(activeSlotId === id){
+activeSlotId = slots[0].id;
+saveActiveSlotIdOnly();
+var data = loadSlotDataById(activeSlotId);
+applySlotData(data);
+}
+renderSlotManager();
+render();
+}
+function haneLine(v){
+return 'A:'+v.A+' B:'+v.B+' C:'+v.C+' D:'+v.D+' 1チャ:'+(v.B-v.D)+' V:'+v.E;
+}
+function ncLine(v){
+return '総鳴き:'+v.soutNaki+' 拾い:'+v.hiroi+' 2解放:'+v.kaihou2+' ノーマル:'+ncNormal(v)+' 口:'+v.kuchi+' ブリーフ:'+v.miniBrief+' SP:'+v.spRoute+' 右×:'+v.spRightMiss+' 左×:'+v.spLeftMiss+' V:'+v.vHit;
+}
+function buildExportText(){
+var lines=[];
+lines.push('=== '+currentSlotName()+' ===');
+lines.push('');
+lines.push('【外しカウント】');
+var haneTotals=emptyVals();
+var haneCount=0;
+var i;
+for(i=0;i<sessions.length;i++){
+if(sessions[i].confirmed){
+haneCount++;
+for(var k=0;k<FIELDS.length;k++){
+var fk=FIELDS[k].key;
+haneTotals[fk]=haneTotals[fk]+sessions[i].vals[fk];
+}
+}
+}
+lines.push('累計(確定'+haneCount+'回) '+haneLine(haneTotals));
+lines.push('B/A:'+pct(haneTotals.B,haneTotals.A)+' C/B:'+pct(haneTotals.C,haneTotals.B)+' C/A:'+pct(haneTotals.C,haneTotals.A)+' E/A:'+pct(haneTotals.E,haneTotals.A));
+for(i=0;i<sessions.length;i++){
+var s=sessions[i];
+lines.push('第'+(i+1)+'回['+(s.confirmed?'確定':'進行中')+'] '+haneLine(s.vals));
+}
+lines.push('');
+lines.push('【通常カウント】');
+var ncTotals=emptyNcVals();
+var ncCount=0;
+for(i=0;i<ncSessions.length;i++){
+if(ncSessions[i].confirmed){
+ncCount++;
+for(var nk in ncTotals){ ncTotals[nk]=ncTotals[nk]+ncSessions[i].vals[nk]; }
+}
+}
+lines.push('累計(確定'+ncCount+'回) '+ncLine(ncTotals));
+lines.push('拾い率:'+pct(ncTotals.hiroi,ncTotals.soutNaki)+' ノーマル率:'+pct(ncNormal(ncTotals),ncTotals.hiroi)+' 当り確率:'+ratioStr(ncNormal(ncTotals),ncTotals.kuchi+ncTotals.miniBrief)+' SP率:'+pct(ncTotals.spRoute,ncTotals.hiroi)+' SP確率:'+ratioStr(ncTotals.spRoute,ncSpAtari(ncTotals))+' 初当たり確率:'+ratioStr(ncTotals.soutNaki,ncTotals.kuchi+ncTotals.miniBrief+ncTotals.vHit));
+for(i=0;i<ncSessions.length;i++){
+var ns=ncSessions[i];
+lines.push('第'+(i+1)+'回['+(ns.confirmed?'確定':'進行中')+'] '+ncLine(ns.vals));
+}
+return lines.join('\n');
+}
+function openExport(){
+document.getElementById('exportSlotName').textContent = currentSlotName();
+document.getElementById('exportArea').value = buildExportText();
+document.getElementById('exportOverlay').style.display = 'flex';
+}
+function closeExport(){
+document.getElementById('exportOverlay').style.display = 'none';
+}
+function copyExport(){
+var ta = document.getElementById('exportArea');
+ta.focus();
+ta.select();
+try{
+if(navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(ta.value);
+} else {
+document.execCommand('copy');
+}
+var btn = document.getElementById('copyBtn');
+if(btn){
+btn.textContent = 'コピーしました';
+setTimeout(function(){ btn.textContent = 'コピーする'; }, 1500);
+}
+}catch(e){}
+}
+var FIELDS = [
+{key:'A', title:'A', sub:'総鳴き', color:'#2563eb'},
+{key:'B', title:'B', sub:'目的セグ', color:'#d97706'},
+{key:'C', title:'C', sub:'拾い', color:'#059669'},
+{key:'D', title:'D', sub:'2チャ', color:'#7c3aed'},
+{key:'ichi', title:'1チャ', sub:'', color:'#4b5563'},
+{key:'E', title:'E', sub:'V(当たり)', color:'#dc2626'}
+];
+var sessions = [{vals:emptyVals(), confirmed:false}];
+function emptyVals(){
+return {A:0,B:0,C:0,D:0,ichi:0,E:0};
+}
+function loadOldSessions(){
+try{
+var raw = localStorage.getItem('hm_sessions');
+if(raw){
+var parsed = JSON.parse(raw);
+if(parsed && parsed.length){ return parsed; }
+}
+}catch(e){}
+return [{vals:emptyVals(), confirmed:false}];
+}
+function saveSessions(){
+saveCurrentSlotData();
+}
+function labelForKey(key){
+for(var i=0;i<FIELDS.length;i++){
+if(FIELDS[i].key === key){ return FIELDS[i].title + ' ' + FIELDS[i].sub; }
+}
+return key;
+}
+function buildProbCells(v){
+var html = '';
+html += '<div class="probCell">－</div>';
+html += '<div class="probCell">' + pct(v.B, v.A) + '</div>';
+html += '<div class="probCell">対B ' + pct(v.C, v.B) + '<br>対A ' + pct(v.C, v.A) + '</div>';
+html += '<div class="probCell">－</div>';
+html += '<div class="probCell">－</div>';
+html += '<div class="probCell">' + pct(v.E, v.A) + '</div>';
+return html;
+}
+function buildColsRow(vals, idx, editable){
+var html = '<div class="row6">';
+for(var i=0;i<FIELDS.length;i++){
+var f = FIELDS[i];
+var val = (f.key === 'ichi') ? (vals.B - vals.D) : vals[f.key];
+var canEdit = editable && f.key !== 'ichi';
+html += '<div class="col">';
+html += '<div class="colLabel" style="color:' + f.color + '">' + f.title + '</div>';
+html += '<div class="colSub">' + f.sub + '</div>';
+if(canEdit){
+html += '<div class="colValue" onclick="openNumpad(\'hane\',' + idx + ',\'' + f.key + '\')">' + val + '</div>';
+} else {
+html += '<div class="colValueStatic">' + val + '</div>';
+}
+html += '</div>';
+}
+html += '</div>';
+return html;
+}
+function buildTotalPanel(){
+var totals = emptyVals();
+var count = 0;
+for(var i=0;i<sessions.length;i++){
+if(sessions[i].confirmed){
+count++;
+for(var k=0;k<FIELDS.length;k++){
+var key = FIELDS[k].key;
+totals[key] = totals[key] + sessions[i].vals[key];
+}
+}
+}
+var html = '<div class="totalPanel">';
+html += '<div class="totalTitle">累計（確定 ' + count + ' 回）</div>';
+html += buildColsRow(totals, -1, false);
+html += '<div class="row6 probRow">' + buildProbCells(totals) + '</div>';
+html += '</div>';
+return html;
+}
+function buildSessionPanel(s, idx){
+var statusLabel = s.confirmed ? '確定済み' : '進行中';
+var statusClass = s.confirmed ? 'badgeDone' : 'badgeActive';
+var html = '<div class="session' + (s.confirmed ? ' confirmedSession' : '') + '">';
+html += '<div class="sessionHeader">第' + (idx+1) + '回<span class="badge ' + statusClass + '">' + statusLabel + '</span></div>';
+html += buildColsRow(s.vals, idx, !s.confirmed);
+if(!s.confirmed){
+html += '<div class="row6 btnRow">';
+for(var i=0;i<FIELDS.length;i++){
+var f = FIELDS[i];
+if(f.key === 'ichi'){
+html += '<div class="pmBtn" style="visibility:hidden;"></div>';
+continue;
+}
+var btnClass = minusMode ? 'pmBtn minusActive' : 'pmBtn';
+var btnLabel = minusMode ? '－' : '＋';
+html += '<button class="' + btnClass + '" onclick="incDec(\'hane\',' + idx + ',\'' + f.key + '\')">' + btnLabel + '</button>';
+}
+html += '</div>';
+}
+html += '<div class="row6 probRow">' + buildProbCells(s.vals) + '</div>';
+if(!s.confirmed){
+html += '<button class="confirmBtn" onclick="confirmSession(' + idx + ')">この回を確定する</button>';
+} else if(idx === sessions.length - 2){
+html += '<button class="undoBtn" onclick="undoConfirm(' + idx + ')">編集に戻す（累計から除外）</button>';
+}
+html += '</div>';
+return html;
+}
+function confirmSession(idx){
+sessions[idx].confirmed = true;
+sessions.push({vals:emptyVals(), confirmed:false});
+saveSessions();
+render();
+window.scrollTo(0, document.body.scrollHeight);
+}
+function undoConfirm(idx){
+if(!confirm('編集に戻しますか？（累計から除外）')){ return; }
+sessions[idx].confirmed = false;
+if(idx === sessions.length - 2){
+sessions.splice(idx + 1, 1);
+}
+saveSessions();
+render();
+}
+function resetAll(){
+if(!confirm('外しカウントを削除しますか？')){ return; }
+sessions = [{vals:emptyVals(), confirmed:false}];
+saveSessions();
+render();
+}
+function emptyNcVals(){
+return {soutNaki:0, hiroi:0, kaihou2:0, spRoute:0, kuchi:0, miniBrief:0, spRightMiss:0, spLeftMiss:0, vHit:0};
+}
+function migrateNcVals(p){
+if(typeof p.spRoute === 'undefined' && typeof p.normalRoute !== 'undefined'){
+var migrated = (p.hiroi || 0) - p.normalRoute;
+p.spRoute = migrated > 0 ? migrated : 0;
+}
+var defaults = emptyNcVals();
+for(var k in defaults){
+if(typeof p[k] === 'undefined'){ p[k] = 0; }
+}
+return p;
+}
+function loadOldNcSessions(){
+try{
+var raw = localStorage.getItem('hm_normal_sessions');
+if(raw){
+var parsed = JSON.parse(raw);
+if(parsed && parsed.length){
+for(var i=0;i<parsed.length;i++){
+parsed[i].vals = migrateNcVals(parsed[i].vals || {});
+}
+return parsed;
+}
+}
+var oldRaw = localStorage.getItem('hm_normal_counts');
+if(oldRaw){
+var oldVals = migrateNcVals(JSON.parse(oldRaw));
+return [{vals:oldVals, confirmed:false}];
+}
+}catch(e){}
+return [{vals:emptyNcVals(), confirmed:false}];
+}
+function saveNcSessions(){
+saveCurrentSlotData();
+}
+var ncSessions = [{vals:emptyNcVals(), confirmed:false}];
+function resetNormal(){
+if(!confirm('通常カウントを削除しますか？')){ return; }
+ncSessions = [{vals:emptyNcVals(), confirmed:false}];
+saveNcSessions();
+render();
+}
+function confirmNcSession(idx){
+ncSessions[idx].confirmed = true;
+ncSessions.push({vals:emptyNcVals(), confirmed:false});
+saveNcSessions();
+render();
+window.scrollTo(0, document.body.scrollHeight);
+}
+function undoNcConfirm(idx){
+if(!confirm('編集に戻しますか？（累計から除外）')){ return; }
+ncSessions[idx].confirmed = false;
+if(idx === ncSessions.length - 2){
+ncSessions.splice(idx + 1, 1);
+}
+saveNcSessions();
+render();
+}
+function ncNormal(v){ return v.hiroi - v.spRoute; }
+function ncSpAtari(v){ return v.spRoute - v.spRightMiss - v.spLeftMiss; }
+var NC_COLS = [
+{letter:'A', color:'#2563eb',
+item1:{key:'soutNaki', full:'総鳴き', short:'総鳴き', editable:true},
+item2:null,
+statCalc:null},
+{letter:'B', color:'#059669',
+item1:{key:'hiroi', full:'拾い', short:'拾い', editable:true},
+item2:null,
+statCalc:function(v){ return '拾い率<br>' + pct(v.hiroi, v.soutNaki); }},
+{letter:'C', color:'#7c3aed',
+item1:{key:'kaihou2', full:'2回開放', short:'2解放', editable:true},
+item2:{key:null, full:'1回開放', short:'1解放', editable:false, calc:function(v){ return v.soutNaki - v.kaihou2; }},
+statCalc:null},
+{letter:'D', color:'#d97706',
+item1:{key:null, full:'ノーマルルート', short:'ノーマル', editable:false, calc:function(v){ return ncNormal(v); }},
+item2:null,
+statCalc:function(v){ return 'ノーマル率<br>' + pct(ncNormal(v), v.hiroi); }},
+{letter:'E', color:'#0891b2',
+item1:{key:'kuchi', full:'口経由大当り', short:'口', editable:true},
+item2:{key:'miniBrief', full:'ミニブリーフ団経由大当り', short:'ブリーフ', editable:true},
+statCalc:function(v){ return '当り確率<br>' + ratioStr(ncNormal(v), v.kuchi + v.miniBrief); }},
+{letter:'F', color:'#dc2626',
+item1:{key:'spRoute', full:'SPルート', short:'SP', editable:true},
+item2:{key:'spRightMiss', full:'SPルート右ハズレ', short:'右×', editable:true},
+statCalc:function(v){ return 'SP率 ' + pct(v.spRoute, v.hiroi) + '<br>確率 ' + ratioStr(v.spRoute, ncSpAtari(v)); }},
+{letter:'G', color:'#b91c1c',
+item1:{key:'vHit', full:'V(当たり)', short:'V(当たり)', editable:true},
+item2:{key:'spLeftMiss', full:'SPルート左ハズレ', short:'左×', editable:true},
+statCalc:function(v){ return '初当たり確率<br>' + ratioStr(v.soutNaki, v.kuchi + v.miniBrief + v.vHit); }}
+];
+function labelForNc(key){
+for(var i=0;i<NC_COLS.length;i++){
+var c = NC_COLS[i];
+if(c.item1.key === key){ return c.item1.full; }
+if(c.item2 && c.item2.key === key){ return c.item2.full; }
+}
+return key;
+}
+function buildNcSubItem(item, vals, idx, editable, hidden, compact){
+if(compact && hidden){ return ''; }
+var wrapStyle = hidden ? ' style="visibility:hidden;"' : '';
+var val = item.editable ? vals[item.key] : item.calc(vals);
+var html = '<div class="ncSubItem"' + wrapStyle + '>';
+html += '<div class="ncSubLabel">' + item.short + '</div>';
+if(item.editable && editable){
+html += '<div class="colValue" onclick="openNumpad(\'normal\',' + idx + ',\'' + item.key + '\')">' + val + '</div>';
+var btnClass = minusMode ? 'pmBtn minusActive' : 'pmBtn';
+var btnLabel = minusMode ? '－' : '＋';
+html += '<button class="' + btnClass + '" onclick="incDec(\'normal\',' + idx + ',\'' + item.key + '\')">' + btnLabel + '</button>';
+} else {
+html += '<div class="colValueStatic">' + val + '</div>';
+if(!compact){
+html += '<div class="pmBtn" style="visibility:hidden;"></div>';
+}
+}
+html += '</div>';
+return html;
+}
+function buildNcCol(col, vals, idx, editable, compact){
+var html = '<div class="col ncCol7">';
+html += '<div class="colLabel" style="color:' + col.color + ';border-bottom:2px solid ' + col.color + '">' + col.letter + '</div>';
+html += buildNcSubItem(col.item1, vals, idx, editable, false, compact);
+if(col.item2){
+html += buildNcSubItem(col.item2, vals, idx, editable, false, compact);
+} else if(!compact){
+html += buildNcSubItem({short:'\u00a0', editable:false, calc:function(){ return ''; }}, vals, idx, editable, true, compact);
+}
+var statHtml = col.statCalc ? col.statCalc(vals) : '－';
+html += '<div class="ncStat">' + statHtml + '</div>';
+html += '</div>';
+return html;
+}
+function buildNcGrid(vals, idx, editable, compact){
+var html = '<div class="row7">';
+for(var i=0;i<NC_COLS.length;i++){
+html += buildNcCol(NC_COLS[i], vals, idx, editable, compact);
+}
+html += '</div>';
+return html;
+}
+function buildNcTotalPanel(){
+var totals = emptyNcVals();
+var count = 0;
+for(var i=0;i<ncSessions.length;i++){
+if(ncSessions[i].confirmed){
+count++;
+for(var k in totals){
+totals[k] = totals[k] + ncSessions[i].vals[k];
+}
+}
+}
+var html = '<div class="totalPanel">';
+html += '<div class="totalTitle">累計（確定 ' + count + ' 回）</div>';
+html += buildNcGrid(totals, -1, false, true);
+html += '</div>';
+return html;
+}
+function buildNcSessionPanel(s, idx){
+var statusLabel = s.confirmed ? '確定済み' : '進行中';
+var statusClass = s.confirmed ? 'badgeDone' : 'badgeActive';
+var html = '<div class="session' + (s.confirmed ? ' confirmedSession' : '') + '">';
+html += '<div class="sessionHeader">第' + (idx+1) + '回<span class="badge ' + statusClass + '">' + statusLabel + '</span></div>';
+html += buildNcGrid(s.vals, idx, !s.confirmed, false);
+if(!s.confirmed){
+html += '<button class="confirmBtn" onclick="confirmNcSession(' + idx + ')">この回を確定する</button>';
+} else if(idx === ncSessions.length - 2){
+html += '<button class="undoBtn" onclick="undoNcConfirm(' + idx + ')">編集に戻す（累計から除外）</button>';
+}
+html += '</div>';
+return html;
+}
+function renderNormalApp(){
+var appHtml = '';
+for(var i=0;i<ncSessions.length;i++){
+appHtml += buildNcSessionPanel(ncSessions[i], i);
+}
+document.getElementById('app').innerHTML = appHtml;
+}
+function buildTopBar(){
+var html = '<div class="tabBarRow">';
+html += '<div class="tabBtns">';
+html += '<button class="tabBtn' + (currentTab === 'hane' ? ' tabActive' : '') + '" onclick="switchTab(\'hane\')">外しカウント</button>';
+html += '<button class="tabBtn' + (currentTab === 'normal' ? ' tabActive' : '') + '" onclick="switchTab(\'normal\')">通常カウント</button>';
+html += '</div>';
+var modeClass = minusMode ? ' modeOn' : '';
+var modeLabel = minusMode ? '－モード ON' : '－モード OFF';
+html += '<button class="modeToggle' + modeClass + '" onclick="toggleMinusMode()">' + modeLabel + '</button>';
+html += '</div>';
+html += '<div class="slotBarRow">';
+html += '<button class="slotBtn" onclick="openSlotManager()">スロット: ' + currentSlotName() + ' ▾</button>';
+html += '<button class="exportBtnSmall" onclick="openExport()">書き出し</button>';
+html += '</div>';
+if(currentTab === 'hane'){
+html += buildTotalPanel();
+} else {
+html += buildNcTotalPanel();
+}
+return html;
+}
+function render(){
+document.getElementById('stickyTop').innerHTML = buildTopBar();
+if(currentTab === 'hane'){
+var appHtml = '';
+for(var i=0;i<sessions.length;i++){
+appHtml += buildSessionPanel(sessions[i], i);
+}
+document.getElementById('app').innerHTML = appHtml;
+} else {
+renderNormalApp();
+}
+}
+function openNumpad(target, idx, key){
+editTarget = target;
+editIdx = idx;
+editKey = key;
+var curVal;
+if(target === 'hane'){
+curVal = sessions[idx].vals[key];
+} else {
+curVal = ncSessions[idx].vals[key];
+}
+editBuffer = String(curVal);
+var title = (target === 'hane') ? labelForKey(key) : labelForNc(key);
+document.getElementById('numpadTitle').textContent = title + ' を入力';
+document.getElementById('numpadDisplay').textContent = editBuffer;
+document.getElementById('numpadOverlay').style.display = 'flex';
+}
+function numpadPress(d){
+if(editBuffer === '0'){
+editBuffer = d;
+} else {
+editBuffer = editBuffer + d;
+}
+if(editBuffer.length > 6){ editBuffer = editBuffer.substring(0,6); }
+document.getElementById('numpadDisplay').textContent = editBuffer;
+}
+function numpadBackspace(){
+editBuffer = editBuffer.substring(0, editBuffer.length - 1);
+if(editBuffer === ''){ editBuffer = '0'; }
+document.getElementById('numpadDisplay').textContent = editBuffer;
+}
+function numpadClear(){
+editBuffer = '0';
+document.getElementById('numpadDisplay').textContent = editBuffer;
+}
+function numpadOK(){
+var n = parseInt(editBuffer, 10);
+if(isNaN(n) || n < 0){ n = 0; }
+if(editTarget === 'hane'){
+sessions[editIdx].vals[editKey] = n;
+saveSessions();
+} else {
+ncSessions[editIdx].vals[editKey] = n;
+saveNcSessions();
+}
+document.getElementById('numpadOverlay').style.display = 'none';
+render();
+}
+function numpadCancel(){
+document.getElementById('numpadOverlay').style.display = 'none';
+}
+function incDec(target, idx, key){
+if(target === 'hane'){
+var s = sessions[idx];
+if(minusMode){ s.vals[key] = Math.max(0, s.vals[key] - 1); }
+else { s.vals[key] = s.vals[key] + 1; }
+saveSessions();
+} else {
+var ns = ncSessions[idx];
+if(minusMode){ ns.vals[key] = Math.max(0, ns.vals[key] - 1); }
+else { ns.vals[key] = ns.vals[key] + 1; }
+saveNcSessions();
+}
+render();
+}
+initData();
+render();
+</script>
+</body>
+</html>
