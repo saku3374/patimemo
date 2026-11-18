@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GGO メモ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:#000;color:#fff;font-family:-apple-system,sans-serif;font-size:14px}
+textarea,input{user-select:text;-webkit-user-select:text;font-size:16px;background:#111;color:#fff;border:1px solid #444;border-radius:6px;padding:6px}
+#app{display:flex;flex-direction:column;height:100%}
+.tb{display:flex;gap:3px;padding:3px;background:#222}
+.tb div{flex:1;text-align:center;padding:10px 0;border-radius:8px;background:#444;font-weight:bold;font-size:15px}
+.tb .on{background:#1f6feb}
+#pg{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+#memo{width:100%;height:100%;resize:none;border:none;border-radius:0;font-size:15px;line-height:1.5;background:#0b0f16}
+.pn{background:#111;padding:3px 3px calc(3px + env(safe-area-inset-bottom))}
+.x{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-bottom:3px}
+.x div{height:42px;font-size:14px}
+.mn{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.np,.rb{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.np div,.rb div{height:54px;font-size:20px}
+.k{display:flex;align-items:center;justify-content:center;border-radius:9px;background:#333;font-weight:bold;text-align:center;line-height:1.1}
+.k:active{opacity:.55}
+.w{background:linear-gradient(#b8f0a0,#5fd24a);color:#111}
+.s{background:linear-gradient(#ffa6c8,#ff5f95);color:#111}
+.sM{background:#555}.sH{background:#8a7a1a}.sHH{background:#9a2020}
+.cur{outline:3px solid #fff;outline-offset:-3px}
+.zn{background:#6b3fa0}
+.ok{background:#1f7a3a}.ng{background:#7a1f1f}
+.cb{background:#1f4fb0}.cg{background:#1f8a3a}.cr{background:#b02020}
+.dp{background:#000;border:1px solid #555;font-size:22px!important;color:#ffd866}
+.sec{margin:6px;padding:6px;background:#161b22;border:1px solid #30363d;border-radius:8px}
+.sec h3{font-size:14px;margin:2px 0 6px;color:#9fb3c8}
+.ln{display:flex;align-items:center;gap:3px;margin-bottom:3px}
+.ln .l{width:58px;font-weight:bold;font-size:16px}
+.ln .v{flex:1;text-align:center;font-size:18px;font-weight:bold;background:#0d1117;border-radius:6px;padding:8px 0}
+.ln .k{width:38px;height:40px;font-size:20px}
+.p{background:#c03a6b}.m{background:#3a5fc0}
+.bM{border-left:5px solid #888}.bH{border-left:5px solid #d6c22a}.bHH{border-left:5px solid #e03a3a}
+.rw{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #2a2f37}
+.f{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:4px}
+.f input{width:100%}
+.ch{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.ch div{padding:8px 10px;font-size:14px}
+.h1{display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed #2a2f37}
+.h1 span{flex:1}
+</style></head><body>
+<div id="app">
+<div class="tb"><div id="t0" onclick="tab(0)">メモ</div><div id="t1" onclick="tab(1)">移行</div><div id="t2" onclick="tab(2)">履歴</div></div>
+<div id="pg"></div>
+<div class="pn" id="pn"></div>
+</div>
+<script>
+var K='ggo_memo_v1';
+var S;
+try{S=JSON.parse(localStorage.getItem(K));}catch(e){}
+if(!S)S={memo:'',adj:{},hist:[],tab:0};
+var NB='',UD=[];
+var RL=['🔴','🟢','🟣','🟣🔴','🟣🟢'];
+var STN={M:'通常',H:'高確',HH:'超高確'};
+function sv(){try{localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+function $(i){return document.getElementById(i);}
+
+function stOf(t){var s='M',i=0;while(i<t.length){var two=t.substr(i,2);if(two=='[['){s='HH';i+=2;}else if(two==']]'){s='M';i+=2;}else if(t.charAt(i)=='['){s='H';i++;}else if(t.charAt(i)==']'){s='M';i++;}else i++;}return s;}
+function znOpen(t){var a=t.split('〈').length,b=t.split('〉').length;return a>b;}
+
+function put(sym){
+var p='';
+if(NB){var c=S.memo.slice(-1);if(S.memo&&c!='\n'&&c!=' ')p=' ';p+=NB;NB='';}
+if(!p&&!sym)return;
+UD.push(S.memo);if(UD.length>150)UD.shift();
+S.memo+=p+sym;sv();drawMemo();
+}
+function nk(d){if(d=='C')NB='';else if(d=='BS')NB=NB.slice(0,-1);else if(NB.length<4)NB+=d;drawPanel();}
+function hk(){var s=stOf(S.memo);put(s=='H'?']':(s=='HH'?']][':'['));}
+function hh(){var s=stOf(S.memo);put(s=='HH'?']]':(s=='H'?'][[':'[['));}
+function nm(){var s=stOf(S.memo);put(s=='H'?']':(s=='HH'?']]':''));}
+function rs(c){put(c+(znOpen(S.memo)?'〉':''));}
+function undo(){if(!UD.length)return;S.memo=UD.pop();sv();drawMemo();}
+function nl(x){NB='';UD.push(S.memo);S.memo+=x;sv();drawMemo();}
+function edit(v){S.memo=v;sv();}
+
+function tab(i){S.tab=i;sv();draw();}
+
+function drawMemo(){
+var m=$('memo');if(m){m.value=S.memo;m.scrollTop=m.scrollHeight;}
+drawPanel();
+}
+function K_(cls,fn,lb){return '<div class="k '+cls+'" onclick="'+fn+'">'+lb+'</div>';}
+function drawPanel(){
+if(S.tab!==0){$('pn').innerHTML='';return;}
+var s=stOf(S.memo),z=znOpen(S.memo);
+var h='<div class="x">';
+h+=K_('','put(\'GJ①\')','GJ①')+K_('','put(\'GJ②\')','GJ②')+K_('','put(\'GJ③\')','GJ③');
+h+=K_('cb','put(\'青\')','青')+K_('cg','put(\'緑\')','緑')+K_('cr','put(\'赤\')','赤');
+h+=K_('','put(\'BH\')','BH')+K_('','put(\'ボーナス\')','ボーナス')+K_('','put(\'CZ\')','CZ');
+h+=K_('','put(\'🟥\')','🟥')+K_('','put(\'⬛️\')','⬛️')+K_('','put(\'EPB\')','EPB');
+h+=K_('s','put(\'🟣🔴\')','🟣🔴')+K_('s','put(\'🟣🟢\')','🟣🟢')+K_('','put(\'雪\')','雪');
+h+=K_('','nl(\'\\n\')','改行')+K_('','nl(\'\\n───\\n\')','区切')+K_('','undo()','↩戻す');
+h+='</div><div class="mn"><div class="np">';
+var ks=['7','8','9','4','5','6','1','2','3','C','0','BS'];
+for(var i=0;i<12;i++){var d=ks[i];h+=K_('','nk(\''+d+'\')',d=='BS'?'⌫':d);}
+h+='</div><div class="rb">';
+h+='<div class="k dp" style="grid-column:span 3">'+(NB||'—')+'<span style="font-size:13px;color:#aaa;margin-left:8px">'+STN[s]+(z?'・前兆中':'')+'</span></div>';
+h+=K_('w','put(\'🔴\')','🔴')+K_('w','put(\'🟢\')','🟢')+K_('s','put(\'🟣\')','🟣');
+h+=K_('sM'+(s=='M'?' cur':''),'nm()','通常')+K_('sH'+(s=='H'?' cur':''),'hk()','高確')+K_('sHH'+(s=='HH'?' cur':''),'hh()','超高確');
+h+=K_('zn'+(z?' cur':''),'put(\'〈\')','前兆')+K_('ok','rs(\'〇\')','〇')+K_('ng','rs(\'×\')','×');
+h+='</div></div>';
+$('pn').innerHTML=h;
+}
+
+var TK=['[[',']]','[',']','🟣🔴','🟣🟢','🔴','🟢','🟣','〈','〉','〇','×','GJ①','GJ②','GJ③','青','緑','赤','BH','ボーナス','CZ'];
+function z2(){return [0,0];}
+function parse(t){
+var R={M:[],H:[],HH:[]};for(var q=0;q<5;q++){R.M.push(z2());R.H.push(z2());R.HH.push(z2());}
+var G={n:[0,0,0],h:[0,0,0],r:[0,0,0]},C={'青':z2(),'緑':z2(),'赤':z2()};
+var st='M',pd=null,zr=null,zn=false,gj=0,gc='',i=0;
+while(i<t.length){
+var tk=null;
+for(var j=0;j<TK.length;j++){if(t.substr(i,TK[j].length)==TK[j]){tk=TK[j];break;}}
+if(!tk){i++;continue;}
+i+=tk.length;
+var ri=RL.indexOf(tk);
+if(tk=='[[')st='HH';else if(tk==']]'||tk==']')st='M';else if(tk=='[')st='H';
+else if(ri>=0){R[st][ri][0]++;pd={s:st,k:ri};gj=0;if(zn&&!zr){zr=pd;pd=null;}}
+else if(tk=='〈'){zn=true;zr=pd;pd=null;}
+else if(tk=='〉'){zn=false;zr=null;}
+else if(tk=='〇'||tk=='×'){
+var x=zr||pd;
+if(gj&&!zr){if(tk=='×'){G.n[gj-1]++;if(C[gc])C[gc][1]++;}gj=0;}
+else if(x){if(tk=='〇')R[x.s][x.k][1]++;zr=null;pd=null;}
+}
+else if(tk.indexOf('GJ')===0){gj=parseInt(tk.charAt(2)==='①'?1:(tk.charAt(2)==='②'?2:3),10);gc='';pd=null;}
+else if(C[tk]){if(gj)gc=tk;}
+else{if(gj){var ix=tk=='BH'?0:(tk=='CZ'?2:1);G.n[gj-1]++;G.h[gj-1]++;G.r[ix]++;if(C[gc]){C[gc][0]++;C[gc][1]++;}gj=0;}}
+}
+return {R:R,G:G,C:C};
+}
+function av(a,k){return a+(S.adj[k]||0);}
+function ad(k,n,base){var v=(S.adj[k]||0)+n;if(base+v<0)return;S.adj[k]=v;sv();draw();}
+function pc(h,n){return n?' <small>'+Math.round(h/n*100)+'%</small>':'';}
+function line(lb,na,nk2,ha,hk2){
+var n=av(na,nk2),h=av(ha,hk2);
+return '<div class="ln"><div class="l">'+lb+'</div><div class="v">'+n+'</div>'+K_('p','ad(\''+nk2+'\',1,'+na+')','＋')+K_('m','ad(\''+nk2+'\',-1,'+na+')','−')+'<div class="v">'+h+'/'+n+pc(h,n)+'</div>'+K_('p','ad(\''+hk2+'\',1,'+ha+')','＋')+K_('m','ad(\''+hk2+'\',-1,'+ha+')','−')+'</div>';
+}
+function drawCount(){
+var P=parse(S.memo),h='',ss=['M','H','HH'];
+for(var a=0;a<3;a++){
+var s=ss[a];
+h+='<div class="sec b'+s+'"><h3>'+STN[s]+'滞在　左:回数　右:ボーナス当選</h3>';
+for(var b=0;b<5;b++){var d=P.R[s][b];h+=line(RL[b],d[0],'r'+s+b+'n',d[1],'r'+s+b+'h');}
+h+='</div>';
+}
+h+='<div class="sec"><h3>グレネードジャッジ　左:到達　右:報酬当選</h3>';
+for(var c=0;c<3;c++)h+=line('①②③'.charAt(c),P.G.n[c],'g'+c+'n',P.G.h[c],'g'+c+'h');
+h+='<div class="rw"><span>BH / ボーナス / CZ</span><b>'+P.G.r[0]+' / '+P.G.r[1]+' / '+P.G.r[2]+'</b></div>';
+var cl=['青','緑','赤'];
+for(var e=0;e<3;e++){var x=P.C[cl[e]];h+='<div class="rw"><span>'+cl[e]+'表示 → 当選</span><b>'+x[0]+'/'+x[1]+pc(x[0],x[1])+'</b></div>';}
+h+='</div><div class="sec"><div class="k ng" style="height:44px" onclick="if(confirm(\'手動補正を0に戻す？\')){S.adj={};sv();draw();}">手動補正リセット</div></div>';
+$('pg').innerHTML=h;
+}
+
+var QK=['🔴','🟢','🟣','🟣🔴','🟣🟢','GJ①','GJ②','GJ③','天井'];
+var QR=['🟥','⬛️','EPB','CZ〇','CZ×','AT','上位'];
+function qa(id,v){var e=$(id);e.value=(e.value?e.value+' ':'')+v;}
+function addH(){
+var o={g:$('hg').value,k:$('hk').value,r:$('hr').value,n:$('hn').value,m:$('hm').value,x:$('hx').value};
+if(!o.g&&!o.k&&!o.r)return;
+S.hist.push(o);sv();draw();
+}
+function delH(i){if(confirm('この行を消す？')){S.hist.splice(i,1);sv();draw();}}
+function hTxt(){var t='';for(var i=0;i<S.hist.length;i++){var o=S.hist[i];t+=[o.g,o.k,o.r,o.n?o.n+'連':'',o.m?o.m+'枚':'',o.x].join(' ').replace(/ +/g,' ').trim()+'\n';}return t;}
+function cp(t){
+var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+try{document.execCommand('copy');alert('コピーした');}catch(e){}
+document.body.removeChild(a);
+}
+function drawHist(){
+var h='<div class="sec"><h3>当選を追加</h3><div class="f"><input id="hg" type="number" inputmode="numeric" placeholder="G数"><input id="hk" placeholder="契機"><input id="hr" placeholder="結果"></div>';
+h+='<div class="ch">';for(var i=0;i<QK.length;i++)h+=K_('','qa(\'hk\',\''+QK[i]+'\')',QK[i]);h+='</div>';
+h+='<div class="ch">';for(var j=0;j<QR.length;j++)h+=K_('','qa(\'hr\',\''+QR[j]+'\')',QR[j]);h+='</div>';
+h+='<div class="f"><input id="hn" type="number" inputmode="numeric" placeholder="連"><input id="hm" type="number" inputmode="numeric" placeholder="枚数"><input id="hx" placeholder="画面など"></div>';
+h+=K_('ok','addH()','追加')+'</div>';
+var tg=0,at=0,rn=0,md=0,cz=0;
+h+='<div class="sec"><h3>履歴</h3>';
+for(var k=0;k<S.hist.length;k++){
+var o=S.hist[k];tg+=parseInt(o.g,10)||0;
+if(o.n!==''&&o.n!=null){at++;rn+=parseInt(o.n,10)||0;}
+md+=parseInt(o.m,10)||0;
+if((o.r||'').indexOf('CZ')>=0)cz++;
+h+='<div class="h1"><b>'+(k+1)+'</b><span>'+[o.g,o.k,o.r,o.n?o.n+'連':'',o.m?o.m+'枚':'',o.x].join(' ')+'</span>'+K_('ng','delH('+k+')','×')+'</div>';
+}
+var n=S.hist.length;
+h+='</div><div class="sec"><h3>まとめ</h3>';
+h+='<div class="rw"><span>総G数</span><b>'+tg+'</b></div>';
+h+='<div class="rw"><span>初当たり</span><b>'+n+'回 '+(n&&tg?'1/'+(tg/n).toFixed(1):'')+'</b></div>';
+h+='<div class="rw"><span>CZ</span><b>'+cz+'回</b></div>';
+h+='<div class="rw"><span>AT</span><b>'+at+'回 '+(at?'平均'+(rn/at).toFixed(2)+'連':'')+'</b></div>';
+h+='<div class="rw"><span>獲得枚数</span><b>'+md+'</b></div>';
+h+='<div class="ch" style="margin-top:8px">'+K_('cb','cp(hTxt())','履歴コピー')+K_('cb','cp(S.memo)','メモコピー')+K_('ng','allR()','全リセット')+'</div></div>';
+$('pg').innerHTML=h;
+}
+function allR(){if(confirm('メモ・補正・履歴を全部消す？')){UD.push(S.memo);S.memo='';S.adj={};S.hist=[];sv();draw();}}
+
+function draw(){
+for(var i=0;i<3;i++)$('t'+i).className=S.tab===i?'on':'';
+if(S.tab===0){$('pg').innerHTML='<textarea id="memo" oninput="edit(this.value)"></textarea>';drawMemo();}
+else{$('pn').innerHTML='';if(S.tab===1)drawCount();else drawHist();}
+}
+draw();
+</script>
+</body></html>
