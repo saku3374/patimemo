@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>星矢黄金 周期マップ</title>
+<style>
+*{box-sizing:border-box;margin:0;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{height:100%}
+body{background:#111;color:#eee;font-family:-apple-system,sans-serif;font-size:14px;display:flex;flex-direction:column;height:100dvh}
+#hd{padding:6px;background:#1c1c1c;border-bottom:1px solid #333;padding-top:calc(6px + env(safe-area-inset-top))}
+.ln{margin-bottom:4px;line-height:1.7}
+.tg{display:inline-block;background:#2c2c2c;border-radius:6px;padding:1px 7px;margin-right:3px}
+#lg{flex:1;overflow-y:auto;padding:4px;-webkit-overflow-scrolling:touch}
+#pn{background:#1a1a1a;padding:4px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+.g{display:grid;gap:4px;margin-bottom:4px;grid-template-columns:repeat(3,1fr)}
+button{background:#333;color:#eee;border:0;border-radius:8px;font-size:15px;height:44px;padding:0 2px}
+button:active{background:#555}
+.bg{height:62px;font-size:18px;font-weight:bold}
+.hb{height:32px;font-size:13px;padding:0 10px;margin-left:4px}
+#ov{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.82);display:none;flex-direction:column;justify-content:flex-end;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));z-index:9}
+#ov h3{margin:6px 2px;font-size:15px}
+#ov .g button{height:50px;font-size:14px}
+input,textarea{-webkit-user-select:text;user-select:text;font-size:16px;padding:8px;border-radius:8px;border:0;width:100%}
+textarea{height:60vh;background:#000;color:#eee;font-size:13px;border:1px solid #444}
+</style></head><body>
+<div id="hd"></div>
+<div id="lg"></div>
+<div id="pn"></div>
+<div id="ov"></div>
+<script>
+var C=['①','②','③','④','⑤','⑥'];
+function ci(n){return C[n-1]||String(n);}
+var TJ={'AT後':[600,1200,6],'リセ後':[300,900,6],'上位CZ失敗後':[300,900,6],'上位AT後':[300,900,3]};
+var KEY='seiyaMap1';
+function def(){return {m:'N',cyc:1,tj:'AT後',sl:['?','?','?','?','?'],kg:{n:'',src:'',c:[]},rows:[{c:[],e:''}],na:[],log:[],at:0,s:0,pr:null,lk:null,stk:null};}
+var S=def(),U=[],T=null,MT=null;
+try{var sv=localStorage.getItem(KEY);if(sv)S=JSON.parse(sv);}catch(e){}
+try{U=JSON.parse(localStorage.getItem(KEY+'u'))||[];}catch(e){U=[];}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function snap(){U.push(JSON.stringify(S));if(U.length>30)U.shift();try{localStorage.setItem(KEY+'u',JSON.stringify(U));}catch(e){}}
+function $(id){return document.getElementById(id);}
+function add(t,k){var e={t:t,m:S.m,s:S.s,k:k||''};if(k=='as')e.n=S.at;S.log.push(e);save();rd();}
+function row(){return S.rows[S.rows.length-1];}
+function cell(i){var r=row();if(!r.c[i])r.c[i]={};return r.c[i];}
+function mk(r,i){for(var a=0;a<S.rows.length;a++)for(var b=0;b<6;b++){var q=S.rows[a].c[b];if(q)delete q.L;}if(!S.rows[r].c[i])S.rows[r].c[i]={};S.rows[r].c[i].L=1;S.lk=[r,i];}
+function note(t){var r=T?T[0]:S.rows.length-1,i=T?T[1]:S.cyc-1;mk(r,i);var c=S.rows[r].c[i];c.n=(c.n?c.n+' ':'')+t;}
+function curT(){return !T||T[0]==S.rows.length-1;}
+function shift(){S.sl.shift();S.sl.push('?');for(var i=0;i<S.na.length;i++)if(S.na[i].r>0)S.na[i].r--;}
+function gp(){var c=row().c[S.cyc-1];return c&&c.g?c.g:'';}
+function kg(name,lv,src){
+src=src+ci(S.cyc);
+if(lv==2){kgSet(name,src);}
+else if(!S.kg.n){S.kg.c.push(name+'('+src+')');}
+}
+var KGC={'星矢':'#e04848','氷河':'#3cb4ff','紫龍':'#2ecc71','瞬':'#ff6fb5','一輝':'#ff9f1a'};
+function kgSet(n,src){S.kg.n=n;S.kg.src=src;if(!S.ks)S.ks=[];var o=S.ks[S.ks.length-1];if(o&&!o.t)o.n=n;else S.ks.push({n:n,f:S.kf||[0,0],t:null});}
+function kgReset(){var o=S.ks&&S.ks[S.ks.length-1];if(o&&!o.t)o.t=S.lp||[S.rows.length-1,S.cyc-1];S.kf=[S.rows.length-1,0];S.kg={n:'',src:'',c:[]};}
+function kgAt(r,i){if(!S.ks)return null;var cr=S.rows.length-1,ci0=S.cyc-1;for(var q=0;q<S.ks.length;q++){var a=S.ks[q],e=a.t||[cr,ci0];if((r>a.f[0]||r==a.f[0]&&i>=a.f[1])&&(r<e[0]||r==e[0]&&i<=e[1]))return KGC[a.n];}return null;}
+function kgHtml(){
+if(S.kg.n)return '<b style="color:#111;background:'+KGC[S.kg.n]+';padding:1px 6px;border-radius:5px">'+S.kg.n+'【確】</b> ('+S.kg.src+')';
+if(S.kg.c.length)return S.kg.c.join('・')+' ?';
+return '<span style="color:#777">不明</span>';
+}
+function setR(a,b,v){for(var i=a;i<b;i++){var x=S.sl[i];if(x=='?'||(x=='≠6'&&v!='≠6'))S.sl[i]=v;}}
+function nt(x,r){S.na.push({t:x+'['+ci(S.cyc)+']',r:r||5,tot:r||5,s0:S.rows.length-1,nd:x.indexOf('①2')>=0?2:(x.indexOf('①1')>=0?1:0)});}
+function bad(v,i){
+if(v=='≤2')return i>2;if(v=='≤3')return i>3;if(v=='≤4')return i>4;if(v=='≠6')return i==6;
+var k=C.indexOf(v);if(k>=0)return i!=k+1;return false;
+}
+var W=[
+['小宇宙を燃やせ！','デフォルト','デフォ',0,null],
+['ここからが本番だぜ！','デフォルト','本番',0,null],
+['天馬星座の輝きが増しているようだ','星矢の加護 期待度UP','天馬',1,function(){kg('星矢',1,'下');}],
+['白鳥星座の輝きが増しているようだ','氷河の加護 期待度UP','白鳥',1,function(){kg('氷河',1,'下');}],
+['龍星座の輝きが増しているようだ','紫龍の加護 期待度UP','龍',1,function(){kg('紫龍',1,'下');}],
+['アンドロメダ星座の輝きが増しているようだ','瞬の加護 期待度UP','アンドロメダ',1,function(){kg('瞬',1,'下');}],
+['鳳凰星座の輝きが増しているようだ','一輝の加護 期待度UP','鳳凰',1,function(){kg('一輝',1,'下');}],
+['守護星座の加護を感じる！？','いずれかの加護示唆','加護感じる!?',1,function(){kg('どれか',1,'下');}],
+['守護星座の加護を感じる！','いずれかの加護示唆','加護感じる!',1,function(){kg('どれか',1,'下');}],
+['守護星座の加護 聖域MODE勝利期待度UP','星矢の加護 濃厚','星矢確',2,function(){kg('星矢',2,'下');}],
+['守護星座の加護 小宇宙ポイント獲得量UP','氷河の加護 濃厚','氷河確',2,function(){kg('氷河',2,'下');}],
+['守護星座の加護 影ノ襲来出現率UP','紫龍の加護 濃厚','紫龍確',2,function(){kg('紫龍',2,'下');}],
+['守護星座の加護 ナビ高確移行率UP','瞬の加護 濃厚','瞬確',2,function(){kg('瞬',2,'下');}],
+['守護星座の加護 勝利時Battle of ZODIAC期待度UP','一輝の加護 濃厚','一輝確',2,function(){kg('一輝',2,'下');}],
+['災厄は回避できそうだ','周期の最深部否定','災厄回避',3,function(){setR(0,1,'≠6');}],
+['火時計が４周するまでに…','4周期までに当選濃厚','4周まで',3,function(){S.sl[0]='≤4';}],
+['火時計が３周するまでに…','3周期までに当選濃厚','3周まで',3,function(){S.sl[0]='≤3';}],
+['火時計が２周するまでに…','2周期までに当選濃厚','2周まで',3,function(){S.sl[0]='≤2';}],
+['この先の聖域がチャンス！','今の周期でCZ濃厚','聖域ﾁｬﾝｽ!',3,function(){S.sl[0]=ci(S.cyc);}],
+['この先の聖域がチャンス！？','今の周期が天井 期待度50%超','聖域ﾁｬﾝｽ!?',3,function(){nt('当該天井50%+',1);}],
+['偶数周期がチャンス？','偶数周期示唆・80%で3周期以内','偶数?',3,function(){S.sl[0]='偶?';}],
+['奇数周期がチャンス？','奇数周期示唆・80%で3周期以内','奇数?',3,function(){S.sl[0]='奇?';}]
+];
+var WC=['#333','#1f3d66','#6b5a12','#1f5a3a'];
+var IC=[
+['星矢','🟦','星矢','デフォルト',null],
+['貴鬼','🟦','貴鬼＆辰巳','デフォルト',null],
+['青銅4人','🟦','青銅聖闘士4人','先3回とも6周期なし',function(){setR(0,3,'≠6');nt('青銅 先3回⑥なし',3);}],
+['魔鈴','🟩','魔鈴＆シャイナ','先3回とも3周期以内',function(){setR(0,3,'≤3');nt('魔鈴 先3回3周以内',3);}],
+['アフロ','🟦','アフロディーテ＆デスマスク','今の周期で当たる or 先に1周期あり（示唆）',function(){nt('当該or先に①1+?');}],
+['サガ','🟦','サガ＆ジェミニ','今の周期で当たる or 先に1周期あり（濃厚）',function(){nt('当該or先に①1+');}],
+['ムウ','🟦','アルデバラン＆ムウ','今の周期 or 先に1周期あり＋近くに1周期の示唆',function(){nt('当該or先に①1+・近く①?');}],
+['アイオリア','🟣','アイオリア＆カシオス','今の周期 or 先に1周期が2回以上',function(){nt('当該or先に①2+');}],
+['老師','🟣','老師＆天秤座の聖衣','今の周期 or 先に1周期2回以上＋近くに1周期の示唆',function(){nt('当該or先に①2+・近く①?');}],
+['アイオロス','🟥','アイオロス＆星矢','今の周期で当たる＋先に1周期が2回以上',function(){S.sl[0]=ci(S.cyc);nt('先に①2+');}]
+];
+var ICC={'🟦':'#1f3d66','🟩':'#1f5a3a','🟣':'#4b2470','🟥':'#6b1f1f'};
+var WC=['#333','#1f3d66','#6b5a12','#1f5a3a'];
+var ICC={'🟦':'#1f3d66','🟩':'#1f5a3a','🟣':'#4b2470','🟥':'#6b1f1f'};
+var KD=['星矢','氷河','紫龍','瞬','一輝'];
+var RR=['弱🍒','強🍒','スイカ','チャンス目','強小宇宙','小宇宙目','リプ','ベル'];
+var END=['デフォ','3人','4人','5人','走る青銅','マリンシャイナ','沙織','一輝'];
+var OT=['メモ…','HC','聖域','火時計赤','夕','火時計St','鳳凰Vストック','ブースト×2','ブースト×4','ER','サガ','千日','幻魔','金7','リセ判明','据え判明','上位CZ×'];
+var TK=['AT後','リセ後','上位CZ失敗後','上位AT後'];
+var SV=['?','①','②','③','④','⑤','⑥','≤2','≤3','≤4','≠6','偶?','奇?'];
+var KM=['クリア','星矢【確】','氷河【確】','紫龍【確】','瞬【確】','一輝【確】'];
+
+/* overlay */
+var PK=null;
+function ovr(h){var o=$('ov');o.innerHTML=h;o.style.display='flex';}
+function cls(){$('ov').style.display='none';PK=null;}
+function cb(){return '<button style="width:100%;margin-top:4px" onclick="cls()">閉じる</button>';}
+function pick(tt,op,f,cols){PK=f;var h='<h3>'+tt+'</h3><div class="g" style="grid-template-columns:repeat('+(cols||3)+',1fr)">';for(var i=0;i<op.length;i++)h+='<button onclick="pk2('+i+')">'+op[i]+'</button>';ovr(h+'</div>'+cb());}
+function pk2(i){var f=PK;cls();if(f)f(i);T=null;}
+function list(tt,items,fn){var h='<h3>'+tt+'</h3><div style="max-height:75vh;overflow-y:auto">';for(var i=0;i<items.length;i++)h+='<div onclick="'+fn+'('+i+')" style="background:'+items[i][2]+';border-radius:8px;padding:8px 10px;margin-bottom:4px"><div style="font-size:14px;font-weight:bold">'+items[i][0]+'</div><div style="font-size:11px;color:#ddd">'+items[i][1]+'</div></div>';ovr(h+'</div>'+cb());}
+var NV='',NC=null;
+function numIn(tt,f){NV='';NC=f;var h='<h3>'+tt+'</h3><div id="nv" style="font-size:28px;text-align:right;padding:6px 10px;background:#000;border-radius:8px;margin-bottom:6px;min-height:46px"></div><div class="g">';var k=['7','8','9','4','5','6','1','2','3','C','0','←'];for(var i=0;i<12;i++)h+='<button style="font-size:20px" onclick="nk(\''+k[i]+'\')">'+k[i]+'</button>';ovr(h+'</div><button style="width:100%;background:#2f5d2f;height:50px" onclick="nok()">決定</button>');}
+function nk(d){if(d=='C')NV='';else if(d=='←')NV=NV.slice(0,-1);else if(NV.length<5)NV+=d;$('nv').innerHTML=NV;}
+function nok(){var f=NC;NC=null;cls();if(f)f(NV);}
+
+/* 下部・IC・カード・レア（T対象） */
+function pkW(){var a=[];for(var i=0;i<W.length;i++)a.push([W[i][0],W[i][1],WC[W[i][3]]]);list('下部ウインドウ',a,'pkW2');}
+function pkW2(i){cls();snap();note(W[i][2]);if(W[i][4]&&(W[i][3]<3||curT()))W[i][4]();add(W[i][2]);T=null;}
+function pkI(tt){var a=[];for(var i=0;i<IC.length;i++)a.push([IC[i][1]+' '+IC[i][2],IC[i][3],ICC[IC[i][1]]]);list(tt||'アイキャッチ',a,'pkI2');}
+function pkI2(i){cls();snap();var r=T?T[0]:(S.lp?S.lp[0]:null),j=T?T[1]:(S.lp?S.lp[1]:null);if(r!=null&&S.rows[r]){if(!S.rows[r].c[j])S.rows[r].c[j]={};S.rows[r].c[j].ic=ICC[IC[i][1]];var cc=S.rows[r].c[j];cc.n=(cc.n?cc.n+' ':'')+IC[i][0]+IC[i][1];mk(r,j);}var n0=S.na.length;if(IC[i][4]&&curT())IC[i][4]();if(S.na.length>n0){var na=S.na[S.na.length-1];na.c=ICC[IC[i][1]];if(na.t.indexOf(IC[i][0])<0)na.t=IC[i][0]+' '+na.t;}add(IC[i][0]+'IC'+IC[i][1],'ic');T=null;}
+var KGD=['通常・AT：周期到達のたびに規定周期の短縮抽選','通常・AT：小宇宙目のpt獲得が優遇','通常：スイカで影ノ襲来・HC当選率UP／AT：スイカでVチャレ優遇','通常：弱🍒・小宇宙目で高確移行率UP／AT：夕方ステージ以上濃厚','通常：規定周期到達でAT直撃濃厚／AT：規定周期で鳳凰Vチャレ'];
+var ENDD=['示唆なし','紫龍・氷河・瞬 → 奇数設定示唆','＋星矢 → 偶数設定示唆','＋一輝 → 高設定示唆【強】','高設定示唆','設定4以上濃厚','設定6濃厚','復活濃厚'];
+var LF=null;function lst(tt,items,f){LF=f;list(tt,items,'lf2');}function lf2(i){var f=LF;LF=null;cls();f(i);T=null;}
+function kgI(pre){var a=[];for(var i=0;i<5;i++)a.push([pre+KD[i],KGD[i],KGC[KD[i]]+'55']);return a;}
+function pkK(){lst('カード（ハズレ時＝その加護の期待度UP）',kgI(''),function(i){snap();kg(KD[i],1,'カ');note('カ'+KD[i]);add('カ'+KD[i]);});}
+function pkR(){pick('レア役',RR,function(i){snap();note(RR[i]);add(RR[i]);},4);}
+function pkO(){var T0=T;pick('その他',OT,function(i){var t=OT[i];T=T0;if(t=='メモ…'){MT=T0;ovr('<h3>メモ</h3><input id="mi"><button style="width:100%;background:#2f5d2f;margin-top:6px" onclick="var m=$(\'mi\').value;cls();T=MT;if(m){snap();note(m);add(m);}T=null;rd();">追加</button>'+cb());$('mi').focus();return;}snap();
+if(t=='リセ判明'){S.tj='リセ後';S.sl=['?','?','?','?','?'];}
+if(t=='上位CZ×')S.tj='上位CZ失敗後';
+note(t);add(t);});}
+
+/* メイン操作 */
+function cx(){if(past())return pEd('×');snap();var c=cell(S.cyc-1);c.r='×';S.lp=[S.rows.length-1,S.cyc-1];mk(S.lp[0],S.lp[1]);add(gp()+ci(S.cyc)+'×');S.cyc=Math.min(S.cyc+1,6);save();rd();}
+function reach(tag){var A=S.m=='A',c=cell(S.cyc-1);c.r='〇';c.a=A;c.s=S.s;var R0=row();R0.e=(R0.e?R0.e+' ':'')+tag;R0.k=S.sl[0];S.pr=S.rows.length-1;S.lp=[S.pr,S.cyc-1];mk(S.pr,S.cyc-1);
+if(S.cyc==1)for(var q=0;q<S.na.length;q++)S.na[q].h=(S.na[q].h||0)+1;
+S.lc=S.cyc;S.rows.push({c:[],e:''});shift();S.cyc=1;if(!A)kgReset();}
+function rs(t){if(S.pr!=null&&S.rows[S.pr])S.rows[S.pr].e+=t;S.pr=null;}
+function wayB(){if(past())return pEd('〇');if(S.stk!=null)return stkR('ストック分のWAYの結果',['〇 AT','×'],function(k,R0){if(!k){R0.e+='→AT'+(S.at+1);atS('ストックway〇');}else{R0.e+='×';add('ストックway×');pkI('CZ失敗後のアイキャッチ（出なければ閉じる）');}});snap();var g0=gp();reach('CZ');add(g0+ci(S.lc)+'聖域〇');wayP();}
+function wayP(){pick('WHO ARE YOU?の結果',['〇 AT','×'],function(i){snap();if(!i){rs('→AT'+(S.at+1));atS(ci(S.lc)+'way〇');}else{rs('×');add('way×');pkI('CZ失敗後のアイキャッチ（出なければ閉じる）');}},2);}
+function tenB(){if(past())return pEd('天');var TB=['WAY','影','直撃'];pick('天井の恩恵は？',TB,function(i){pick('規定も同時にたまってた？',['いいえ','はい（規定CZはストック）'],function(st){tenG(TB[i],st);},1);},3);}
+function tenG(b,st){var n='天井'+b,tc=[S.rows.length-1,S.cyc-1];function tn(t){T=tc;note(t);T=null;}snap();tn(st?n+'+規定':n);if(st){reach('ストック');S.stk=S.pr;S.pr=null;}
+if(b=='直撃'){tn('→AT'+(S.at+1));atS(ci(S.lc)+n);return;}
+add(n);pick(n+'の結果',['〇 AT','×'],function(k){snap();if(!k){tn('→AT'+(S.at+1));atS(n+'〇');}else{tn('×');add(n+'×');pkI('失敗後のアイキャッチ（出なければ閉じる）');}},2);}
+function stkR(tt,op,f){pick(tt,op,function(k){snap();var R0=S.rows[S.stk];S.stk=null;f(k,R0);},2);}
+function kage(){pick('影ノ襲来の結果',['〇 AT','×'],function(i){snap();note(i?'影×':'影〇');if(!i)atS('影〇');else add('影×');},2);}
+function choku(){snap();var g0=gp();reach('直撃');rs('→AT'+(S.at+1));atS(g0+ci(S.lc)+'直撃');}
+function atS(t){S.at++;S.m='A';S.s=0;add(t,'as');}
+var VC=['V〇','V×','鳳凰V〇','鳳凰V×','EX〇','EX×'];
+function vch(){if(S.stk!=null)return stkR('ストック分の結果',VC,function(k,R0){R0.e+=VC[k];add('ストック'+VC[k]);});pick('Vチャレの結果',VC,function(i){snap();var t=VC[i];reach(t);if(i==2||i==3)kgSet('一輝','鳳凰V');S.pr=null;add(t);},2);}
+function setB(){pick('セット'+(S.s+1)+'：何周期目？',C,function(i){var c=i+1,p=['不明'];for(var n=0;n<12;n++)p.push(n+'pt');
+pick('火時計のpt',p,function(j){snap();S.s++;for(var z=0;z<c-1;z++){var q=cell(z);if(!q.r){q.r='→';q.a=1;q.s=S.s>1?S.s-1:0;}}S.cyc=c;cell(c-1).a=1;note('S'+S.s+(j?':'+(j-1)+'pt':''));add(ci(c)+(j?(j-1)+'-':''),'st');},4);});}
+function bat(){snap();note('バトル×');add('バトル×');}
+function atEnd(){var a=[];for(var q=0;q<END.length;q++)a.push([END[q],ENDD[q],'#333']);lst('AT終了画面',a,function(i){numIn('獲得枚数（なければそのまま決定）',function(n){pick('終了後の天井',['AT後','上位AT後'],function(k){snap();add((n?n+'枚 ':'')+END[i],'ae');S.m='N';S.s=0;S.tj=k?'上位AT後':'AT後';cell(S.cyc-1);S.lp=[S.rows.length-1,S.cyc-1];save();rd();pkI('AT終了後のアイキャッチ（出なければ閉じる）');},2);});});}
+function tgl(){snap();if(S.m=='A'){add('通常へ','ae');S.m='N';S.s=0;}else atS('AT');save();rd();}
+function undo(){if(!U.length)return;var l=S.log.length?S.log[S.log.length-1].t:'直前の操作';pick('「'+l+'」を取り消す？',['取り消す'],function(){S=JSON.parse(U.pop());try{localStorage.setItem(KEY+'u',JSON.stringify(U));}catch(e){}save();rd();},1);}
+function nw(){pick('全部消して新規にする？（取消で戻せる）',['新規にする'],function(){snap();S=def();save();rd();},1);}
+
+/* マス選択 */
+function ce(r,j){if(r==S.rows.length-1){snap();S.cyc=j;T=null;mk(r,j-1);save();rd();return;}if(T&&T[0]==r&&T[1]==j-1)T=null;else T=[r,j-1];rd();}
+function past(){return T&&T[0]!=S.rows.length-1;}
+function pEd(v){snap();var c=S.rows[T[0]].c[T[1]]||{};S.rows[T[0]].c[T[1]]=c;c.r=v;mk(T[0],T[1]);add('修正:'+(T[0]+1)+'行'+C[T[1]]+v);T=null;}
+function fs(f){pick((f?f+'つ先':'今回')+'の周期天井',SV,function(i){snap();S.sl[f]=SV[i];save();rd();},4);}
+
+/* 描画 */
+function cellH(c,i,v,isNow,oc,kc){
+var st='border-radius:6px;padding:3px 0;min-height:40px;font-size:13px;',tx='',sub='';
+if(c&&c.r){var bg=c.r=='〇'?(c.a?'#6a4bb0':'#1f6a44'):(c.r=='天'?'#7a6a12':(c.a?'#3b2a5c':'#2a2a2a'));st+='background:'+bg+';';tx=c.r;sub=c.g||'';}
+else if(c&&!isNow&&(c.g||c.n)){st+='background:#222;';sub=c.g||'';}
+else if(isNow){st+='background:#5c430c;border:2px solid #fc6;';tx='今';sub=(S.m=='A'?'AT':'')+(c&&c.g?c.g:'');}
+else if(v!=null&&bad(v,i)){st+='background:#151515;color:#444;text-decoration:line-through;';tx=C[i-1];}
+else if(v!=null){var hi=C.indexOf(v)==i-1||(v=='奇?'&&i%2)||(v=='偶?'&&!(i%2));st+='border:1px dashed '+(hi?'#f9c':'#444')+';color:'+(hi?'#f9c':'#555')+';';tx=hi?'★':'?';}
+if(c&&c.ic)st+='box-shadow:inset 0 0 0 2px '+c.ic+';';
+if(kc)st+='background-image:linear-gradient('+kc+'66,'+kc+'66);';
+if(c&&c.L)st+='outline:3px solid #6ef;outline-offset:-1px;';
+if(oc==SEL)st+='outline:3px solid #f5c;outline-offset:-1px;';
+var n=c&&c.n?'<div style="font-size:9px;color:#fd8;line-height:1.15;word-break:break-all">'+c.n+'</div>':'';
+return '<div onclick="'+oc+'" style="'+st+'">'+tx+'<div style="font-size:10px;color:#bbb;line-height:1.1">'+sub+'</div>'+n+'</div>';}
+function lab(ri,tx,col,oc){var b='',k=0;
+for(var q=0;q<S.na.length&&k<3;q++){var a=S.na[q];if(a.s0==null||ri<a.s0||ri>=a.s0+(a.tot||5))continue;k++;var dn=a.nd&&(a.h||0)>=a.nd;
+b+='<div style="width:'+(dn?2:4)+'px;border-radius:2px;background:'+(a.c||'#888')+';opacity:'+(dn?.35:.95)+(ri==a.s0?';margin-top:6px':'')+'"></div>';}
+return '<div '+(oc?'onclick="'+oc+'" ':'')+'style="align-self:stretch;display:flex;gap:2px;font-size:11px;color:'+col+'">'+b+'<span style="margin-left:auto;align-self:center">'+tx+'</span></div>';}
+var SEL='';
+function mapH(){SEL=T?'ce('+T[0]+','+(T[1]+1)+')':'';
+var h='<div style="display:grid;grid-template-columns:38px repeat(6,minmax(0,1fr)) 62px;gap:3px;text-align:center;align-items:center"><div></div>';
+for(var i=0;i<6;i++)h+='<div style="color:#888;font-size:12px">'+C[i]+'</div>';h+='<div style="color:#888;font-size:11px">到達</div>';
+var n=S.rows.length;
+for(var r=0;r<n;r++){var R0=S.rows[r],now=r==n-1,kk=now?S.sl[0]:R0.k;
+h+=lab(r,now?'今':r+1,now?'#fc6':'#888',now?'fs(0)':'');
+for(var j=1;j<=6;j++)h+=cellH(R0.c[j-1],j,now?S.sl[0]:(kk&&bad(kk,j)?kk:null),now&&j==S.cyc,'ce('+r+','+j+')',kgAt(r,j-1));
+h+='<div style="font-size:10px;color:#9d9;line-height:1.2">'+(R0.e||'')+(kk&&kk!='?'?'<div style="color:#f9c">'+kk+'</div>':'')+'</div>';}
+for(var f=1;f<5;f++){h+=lab(n-1+f,'+'+f,'#666','fs('+f+')');for(var j2=1;j2<=6;j2++)h+=cellH(null,j2,S.sl[f],false,'fs('+f+')');h+='<div style="font-size:10px;color:#f9c">'+(S.sl[f]!='?'?S.sl[f]:'')+'</div>';}
+h+='</div>';
+for(var q=0;q<S.na.length;q++){var a=S.na[q],tt=a.tot||5,b='';
+for(var z=0;z<tt;z++)b+='<span style="display:inline-block;width:13px;height:13px;margin-left:2px;border-radius:3px;'+(z<tt-a.r?'background:'+(a.c||'#888'):'border:1.5px solid '+(a.c||'#888'))+'"></span>';
+h+='<div style="'+(a.r?'':'opacity:.45;')+'background:#1e1e1e;border-radius:6px;padding:5px 8px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;font-size:12px"><span>'+a.t+(a.h?' <b style="color:#9d9">①×'+a.h+'</b>':'')+'</span><span>'+b+'</span></div>';}
+return h;}
+function B(lb,fn,st){return '<button class="bg" style="'+(st||'')+'" onclick="'+fn+'">'+lb+'</button>';}
+function rd(){
+var t=TJ[S.tj]||TJ['AT後'],A=S.m=='A',h='<div class="ln" style="display:flex;justify-content:space-between;align-items:center"><div>';
+h+='<span class="tg" style="background:'+(A?'#5a2f86':'#2c2c2c')+'">'+(A?'AT'+S.at+(S.s?'-S'+S.s:''):'通常')+'</span>';
+h+='<span class="tg" onclick="eCyc()" style="font-size:16px;font-weight:bold">'+ci(S.cyc)+'周期</span></div>';
+h+='<div><button class="hb" onclick="out()">出力</button><button class="hb" onclick="nw()">新規</button></div></div>';
+h+='<div class="ln" style="font-size:13px"><span class="tg" onclick="eTj()">'+S.tj+'</span>CZ間'+t[0]+' / AT間'+t[1]+' / 最大'+t[2]+'周期</div>';
+h+='<div class="ln" onclick="eKg()">加護：'+kgHtml()+'</div>';
+var lt=S.log.length?S.log[S.log.length-1].t:'なし';
+h+=T?'<div class="ln" onclick="T=null;rd()" style="background:#4a1840;border-radius:6px;padding:2px 6px">選択中：<b style="color:#f5c">'+(T[0]+1)+'行目'+C[T[1]]+'</b>（ここに入力／タップで解除）</div>':'<div class="ln" style="background:#0d2a33;border-radius:6px;padding:2px 6px">最後：<b style="color:#6ef">'+lt+'</b></div>';
+$('hd').innerHTML=h;
+$('lg').innerHTML=mapH();var lg=$('lg');lg.scrollTop=lg.scrollHeight;
+var p;
+p='<div class="g" style="grid-template-columns:repeat(4,1fr)">';
+if(A)p+=B('セット','setB()','background:#5a2f86')+B('Vチャレ','vch()','background:#7a2a63')+B('AT終','atEnd()','background:#5a2f86')+'<div></div></div><div class="g" style="grid-template-columns:repeat(4,1fr)"><div></div><div></div>'+B('取消','undo()','background:#633')+B('▶通常','tgl()','background:#244');
+else p+=B('周期×','cx()')+B('WAY','wayB()','background:#2f5d2f')+B('影','kage()','background:#3a3a5c')+B('直撃','choku()','background:#7a2a63')+'</div><div class="g" style="grid-template-columns:repeat(4,1fr)">'+B('天井','tenB()','background:#7a6a12')+'<div></div>'+B('取消','undo()','background:#633')+B('▶AT','tgl()','background:#5a2f86');
+p+='</div><div class="g" style="grid-template-columns:repeat(5,1fr)"><button onclick="pkW()">下部</button><button onclick="pkI()">IC</button><button onclick="pkK()">カード</button><button onclick="pkR()">レア</button><button onclick="pkO()">他</button></div>';
+$('pn').innerHTML=p;}
+function eCyc(){pick('今の周期',C,function(i){snap();S.cyc=i+1;save();rd();});}
+function eTj(){pick('天井の状態',TK,function(i){snap();S.tj=TK[i];save();rd();},2);}
+function eKg(){lst('加護を手動で設定',[['クリア','加護を不明に戻す','#333']].concat(kgI('【確】')),function(i){snap();if(i==0)kgReset();else kgSet(KD[i-1],'手'+ci(S.cyc));save();rd();});}
+
+/* 出力 */
+function exp(){var o=[],nb=[],ab=null;
+function fl(end){o.push('AT'+ab.n);o.push(ab.h);o.push(' ↓');for(var k=0;k<ab.ls.length;k++)o.push(ab.ls[k]);if(end)o.push(end);if(ab.pre.length)o.push('('+ab.pre.join(' ')+')');o.push('---');ab=null;}
+for(var i=0;i<S.log.length;i++){var e=S.log[i];
+if(e.k=='as'){if(ab)fl('');ab={n:e.n,h:e.t,ls:[],pre:nb};nb=[];}
+else if(e.k=='ae'&&ab)fl(e.t);
+else if(e.m=='A'&&ab){if(e.k=='st'||!ab.ls.length)ab.ls.push((e.k=='st'?e.s:'')+e.t);else ab.ls[ab.ls.length-1]+=e.t;}
+else nb.push(e.t);}
+if(ab)fl('');if(nb.length)o.push('('+nb.join(' ')+')');return o.join('\n');}
+function out(){ovr('<h3>出力</h3><textarea id="tx" readonly></textarea><div class="g" style="grid-template-columns:1fr 1fr;margin-top:6px"><button onclick="cp()">コピー</button><button onclick="cls()">閉じる</button></div>');$('tx').value=exp();}
+function cp(){var t=$('tx');t.removeAttribute('readonly');t.focus();t.select();t.setSelectionRange(0,99999);try{document.execCommand('copy');}catch(e){}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t.value);t.setAttribute('readonly','');}
+rd();
+</script>
+</body></html>
