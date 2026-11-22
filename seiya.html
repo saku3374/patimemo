@@ -147,6 +147,7 @@ function pkR(){pick('レア役',RR,function(i){snap();note(RR[i]);add(RR[i]);},4
 function pkO(){var T0=T;pick('その他',OT,function(i){var t=OT[i];T=T0;if(t=='メモ…'){MT=T0;ovr('<h3>メモ</h3><input id="mi"><button style="width:100%;background:#2f5d2f;margin-top:6px" onclick="var m=$(\'mi\').value;cls();T=MT;if(m){snap();note(m);add(m);}T=null;rd();">追加</button>'+cb());$('mi').focus();return;}snap();
 if(t=='リセ判明'){S.tj='リセ後';S.sl=['?','?','?','?','?'];}
 if(t=='上位CZ×')S.tj='上位CZ失敗後';
+if(t=='鳳凰Vストック')S.sg=(S.sg||0)+1;
 note(t);add(t);});}
 
 /* メイン操作 */
@@ -163,11 +164,12 @@ if(b=='直撃'){hA(n+(st?'+規定':''),'AT');tn('→AT'+(S.at+1));atS(ci(S.lc)+n
 add(n);pick(n+'の結果',['〇 AT','×'],function(k){snap();if(!k){hA(n+(st?'+規定':''),'〇 AT');tn('→AT'+(S.at+1));atS(n+'〇');}else{hA(n+(st?'+規定':''),'×');tn('×');add(n+'×');ICH=1;pkI('失敗後のアイキャッチ（出なければ閉じる）');}},2);}
 function stkR(tt,op,f){pick(tt,op,function(k){snap();var R0=S.rows[S.stk];S.stk=null;f(k,R0);},2);}
 var VN=['0個','1個','2個','3個','4個','5個','6個以上','不明'];
-function vCnt(tt,f){pick(tt,VN,function(k){f(k==7?'':'V'+(k==6?'6+':k));},4);}
+function vCnt(tt,f){pick(tt,VN,function(k){VK=k<7?(k==6?6:k):0;f(k==7?'':'V'+(k==6?'6+':k));},4);}
+var VK=0;
 function kage(){pick('影ノ襲来の結果',['〇 AT','×'],function(i){if(i){snap();note('影×');hA('影','影×');add('影×');return;}
-vCnt('VゲットチャレンジEXでVストック何個？',function(v){snap();note('影〇'+(v?' EX'+v:''));hA('影','影〇 AT'+(v?' EX'+v:''));atS('影〇'+(v?' EX'+v:''));});},2);}
+vCnt('VゲットチャレンジEXでVストック何個？',function(v){snap();note('影〇'+(v?' EX'+v:''));hA('影','影〇 AT'+(v?' EX'+v:''));var n=VK;atS('影〇'+(v?' EX'+v:''));S.sv=(S.sv||0)+n;save();rd();});},2);}
 function choku(){snap();var g0=gp();reach('直撃');hA(ci(S.lc)+'直撃','AT');rs('→AT'+(S.at+1));atS(g0+ci(S.lc)+'直撃');}
-function atS(t){S.at++;S.m='A';S.s=0;S.sv=0;S.sg=0;add(t,'as');pick('ATのスタートは？',['赤7','金7','不明'],function(k){if(k==2)return;var w=k?'金7':'赤7';snap();note(w);var L=S.log[S.log.length-1];for(var q=S.log.length-1;q>=0;q--)if(S.log[q].k=='as'){S.log[q].t+=' '+w;break;}var h=hAT();if(h)h.r+=' '+w;save();rd();},3);}
+function atS(t){S.at++;S.m='A';S.s=0;add(t,'as');pick('ATのスタートは？',['赤7','金7','不明'],function(k){if(k==2)return;var w=k?'金7':'赤7';snap();note(w);var L=S.log[S.log.length-1];for(var q=S.log.length-1;q>=0;q--)if(S.log[q].k=='as'){S.log[q].t+=' '+w;break;}var h=hAT();if(h)h.r+=' '+w;save();rd();},3);}
 var VC=['V〇','V×','鳳凰V〇','鳳凰V×','EX〇','EX×'];
 var AV=[['星矢・弱（白）「オレたちはあきらめない!」','デフォルト','#444',''],
 ['魔鈴（白）「なんだいこの小宇宙は」','いずれかの加護を示唆','#555','?'],
@@ -198,8 +200,8 @@ function setB(){if(S.s>0&&((S.sv||0)+(S.sg||0))>0){var o=['自力突破'];if(S.s
 function setB2(){pick('セット'+(S.s+1)+'：何周期目？',C,function(i){if(S.guF)S.guF=0;else S.gu=S.s==0?0:Math.min((S.gu||0)+1,GU.length-1);var c=i+1,p=['不明'];for(var n=0;n<12;n++)p.push(n+'pt');
 pick('火時計のpt',p,function(j){snap();S.s++;for(var z=0;z<c-1;z++){var q=cell(z);if(!q.r){q.r='→';q.a=1;q.s=S.s>1?S.s-1:0;}}S.cyc=c;cell(c-1).a=1;note('S'+S.s+(j?':'+(j-1)+'pt':''));add(ci(c)+(j?(j-1)+'-':''),'st');},4);});}
 function bat(){snap();note('バトル×');add('バトル×');}
-function atEnd(){var a=[];for(var q=0;q<END.length;q++)a.push([END[q],ENDD[q],'#333']);lst('AT終了画面',a,function(i){numIn('獲得枚数（なければそのまま決定）',function(n){pick('終了後の天井',['AT後','上位AT後'],function(k){snap();var he=hAT();if(he){he.mai=n;he.scr=i;}add((n?n+'枚 ':'')+END[i],'ae');S.m='N';S.s=0;S.tj=k?'上位AT後':'AT後';cell(S.cyc-1);S.lp=[S.rows.length-1,S.cyc-1];save();rd();ICH=1;pkI('AT終了後のアイキャッチ（出なければ閉じる）');},2);});});}
-function tgl(){snap();if(S.m=='A'){add('通常へ','ae');S.m='N';S.s=0;}else{hA('手動','AT');atS('AT');}save();rd();}
+function atEnd(){var a=[];for(var q=0;q<END.length;q++)a.push([END[q],ENDD[q],'#333']);lst('AT終了画面',a,function(i){numIn('獲得枚数（なければそのまま決定）',function(n){pick('終了後の天井',['AT後','上位AT後'],function(k){snap();var he=hAT();if(he){he.mai=n;he.scr=i;}add((n?n+'枚 ':'')+END[i],'ae');S.m='N';S.s=0;S.sv=0;S.sg=0;S.tj=k?'上位AT後':'AT後';cell(S.cyc-1);S.lp=[S.rows.length-1,S.cyc-1];save();rd();ICH=1;pkI('AT終了後のアイキャッチ（出なければ閉じる）');},2);});});}
+function tgl(){snap();if(S.m=='A'){add('通常へ','ae');S.m='N';S.s=0;S.sv=0;S.sg=0;}else{hA('手動','AT');atS('AT');}save();rd();}
 function undo(){if(!U.length)return;var l=S.log.length?S.log[S.log.length-1].t:'直前の操作';pick('「'+l+'」を取り消す？',['取り消す'],function(){S=JSON.parse(U.pop());try{localStorage.setItem(KEY+'u',JSON.stringify(U));}catch(e){}save();rd();},1);}
 function nw(){pick('全部消して新規にする？（取消で戻せる）',['新規にする'],function(){snap();S=def();save();rd();},1);}
 
