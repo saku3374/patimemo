@@ -134,9 +134,10 @@ function nok(){var f=NC;NC=null;cls();if(f)f(NV);}
 
 /* 下部・IC・カード・レア（T対象） */
 function pkW(){var a=[];for(var i=0;i<W.length;i++)a.push([W[i][0],W[i][1],WC[W[i][3]]]);list('下部ウインドウ',a,'pkW2');}
-function pkW2(i){cls();snap();note(W[i][2]);if(W[i][4]&&(W[i][3]<3||curT()))W[i][4]();add(W[i][2]);T=null;}
+var WG=['50','150','250','350','450','550','不明'];
+function pkW2(i){cls();pick('「'+W[i][0]+'」は何Gで出た？',WG,function(k){var g=k<6?WG[k]:'';snap();note(g+W[i][2]);if(W[i][4]&&(W[i][3]<3||curT()))W[i][4]();add(g+W[i][2]);},4);}
 function pkI(tt){var a=[];for(var i=0;i<IC.length;i++)a.push([IC[i][1]+' '+IC[i][2],IC[i][3],ICC[IC[i][1]]]);list(tt||'アイキャッチ',a,'pkI2');}
-function pkI2(i){cls();snap();if(ICH&&S.hs&&S.hs.length){S.hs[S.hs.length-1].ic=IC[i][0];}ICH=0;var r=T?T[0]:(S.lp?S.lp[0]:null),j=T?T[1]:(S.lp?S.lp[1]:null);if(r!=null&&S.rows[r]){if(!S.rows[r].c[j])S.rows[r].c[j]={};S.rows[r].c[j].ic=ICC[IC[i][1]];var cc=S.rows[r].c[j];cc.n=(cc.n?cc.n+' ':'')+IC[i][0]+IC[i][1];mk(r,j);}var n0=S.na.length;if(IC[i][4]&&curT())IC[i][4]();if(S.na.length>n0){var na=S.na[S.na.length-1];na.c=ICC[IC[i][1]];if(na.t.indexOf(IC[i][0])<0)na.t=IC[i][0]+' '+na.t;}add(IC[i][0]+'IC'+IC[i][1],'ic');T=null;}
+function pkI2(i){cls();snap();var ih=ICH;if(ICH&&S.hs&&S.hs.length){S.hs[S.hs.length-1].ic=IC[i][0];}ICH=0;var lp=ih&&S.lp?S.lp:[S.rows.length-1,S.cyc-1],r=T?T[0]:lp[0],j=T?T[1]:lp[1];if(r!=null&&S.rows[r]){if(!S.rows[r].c[j])S.rows[r].c[j]={};S.rows[r].c[j].ic=ICC[IC[i][1]];var cc=S.rows[r].c[j];cc.n=(cc.n?cc.n+' ':'')+IC[i][0]+IC[i][1];mk(r,j);}var n0=S.na.length;if(IC[i][4]&&curT())IC[i][4]();if(S.na.length>n0){var na=S.na[S.na.length-1];na.c=ICC[IC[i][1]];if(na.t.indexOf(IC[i][0])<0)na.t=IC[i][0]+' '+na.t;}add(IC[i][0]+'IC'+IC[i][1],'ic');T=null;}
 var KGD=['通常・AT：周期到達のたびに規定周期の短縮抽選','通常・AT：小宇宙目のpt獲得が優遇','通常：スイカで影ノ襲来・HC当選率UP／AT：スイカでVチャレ優遇','通常：弱🍒・小宇宙目で高確移行率UP／AT：夕方ステージ以上濃厚','通常：規定周期到達でAT直撃濃厚／AT：規定周期で鳳凰Vチャレ'];
 var ENDD=['示唆なし','紫龍・氷河・瞬 → 奇数設定示唆','＋星矢 → 偶数設定示唆','＋一輝 → 高設定示唆【強】','高設定示唆','設定4以上濃厚','設定6濃厚','復活濃厚'];
 var LF=null;function lst(tt,items,f){LF=f;list(tt,items,'lf2');}function lf2(i){var f=LF;LF=null;cls();f(i);T=null;}
@@ -161,12 +162,40 @@ function tenG(b,st){var n='天井'+b,tc=[S.rows.length-1,S.cyc-1];function tn(t)
 if(b=='直撃'){hA(n+(st?'+規定':''),'AT');tn('→AT'+(S.at+1));atS(ci(S.lc)+n);return;}
 add(n);pick(n+'の結果',['〇 AT','×'],function(k){snap();if(!k){hA(n+(st?'+規定':''),'〇 AT');tn('→AT'+(S.at+1));atS(n+'〇');}else{hA(n+(st?'+規定':''),'×');tn('×');add(n+'×');ICH=1;pkI('失敗後のアイキャッチ（出なければ閉じる）');}},2);}
 function stkR(tt,op,f){pick(tt,op,function(k){snap();var R0=S.rows[S.stk];S.stk=null;f(k,R0);},2);}
-function kage(){pick('影ノ襲来の結果',['〇 AT','×'],function(i){snap();note(i?'影×':'影〇');hA('影',i?'影×':'影〇 AT');if(!i)atS('影〇');else add('影×');},2);}
+var VN=['0個','1個','2個','3個','4個','5個','6個以上','不明'];
+function vCnt(tt,f){pick(tt,VN,function(k){f(k==7?'':'V'+(k==6?'6+':k));},4);}
+function kage(){pick('影ノ襲来の結果',['〇 AT','×'],function(i){if(i){snap();note('影×');hA('影','影×');add('影×');return;}
+vCnt('VゲットチャレンジEXでVストック何個？',function(v){snap();note('影〇'+(v?' EX'+v:''));hA('影','影〇 AT'+(v?' EX'+v:''));atS('影〇'+(v?' EX'+v:''));});},2);}
 function choku(){snap();var g0=gp();reach('直撃');hA(ci(S.lc)+'直撃','AT');rs('→AT'+(S.at+1));atS(g0+ci(S.lc)+'直撃');}
-function atS(t){S.at++;S.m='A';S.s=0;add(t,'as');}
+function atS(t){S.at++;S.m='A';S.s=0;S.sv=0;S.sg=0;add(t,'as');pick('ATのスタートは？',['赤7','金7','不明'],function(k){if(k==2)return;var w=k?'金7':'赤7';snap();note(w);var L=S.log[S.log.length-1];for(var q=S.log.length-1;q>=0;q--)if(S.log[q].k=='as'){S.log[q].t+=' '+w;break;}var h=hAT();if(h)h.r+=' '+w;save();rd();},3);}
 var VC=['V〇','V×','鳳凰V〇','鳳凰V×','EX〇','EX×'];
-function vch(){if(S.stk!=null)return stkR('ストック分の結果',VC,function(k,R0){R0.e+=VC[k];add('ストック'+VC[k]);});pick('Vチャレの結果',VC,function(i){snap();var t=VC[i];reach(t);if(i==2||i==3)kgSet('一輝','鳳凰V');S.pr=null;add(t);},2);}
-function setB(){pick('セット'+(S.s+1)+'：何周期目？',C,function(i){var c=i+1,p=['不明'];for(var n=0;n<12;n++)p.push(n+'pt');
+var AV=[['星矢・弱（白）「オレたちはあきらめない!」','デフォルト','#444',''],
+['魔鈴（白）「なんだいこの小宇宙は」','いずれかの加護を示唆','#555','?'],
+['星矢・強（青）「高まれ!小宇宙よ!」','星矢の加護 濃厚','#1f3d66','星矢'],
+['氷河（黄）「ここはこの氷河に任せろ!」','氷河の加護 濃厚','#6b5a12','氷河'],
+['紫龍（緑）「昇れ龍よ!天高く!」','紫龍の加護 濃厚','#1f5a3a','紫龍'],
+['瞬（ピンク）「僕は戦う!見ていて兄さん!」','瞬の加護 濃厚','#7a2a5c','瞬'],
+['一輝（赤）「オレについて来い!」','一輝の加護 濃厚','#6b1f1f','一輝']];
+var AS=[['青銅（白文字）','デフォルト','#444',0],['青銅（青文字）','当該周期の期待度UP','#1f3d66',0],['青銅（キャラ矛盾）','当該周期の当選濃厚','#6b5a12',1],['一輝','当該周期の当選濃厚','#6b1f1f',1],['黄金（白文字）','当該周期の期待度UP','#444',0],['黄金（青文字）','当該周期の当選濃厚','#1f3d66',1],['ムウ','3周期以内の当選濃厚','#1f5a3a',2],['サガ（白文字）','当該周期の当選濃厚','#444',1],['サガ（青文字）','当該＋次の1周期の当選濃厚','#4b2470',3],['アイオロス','当該＋次の1周期の当選濃厚','#4b2470',3]];
+var GU=[['金牛宮','アルデバラン','星矢'],['双児宮','ジェミニ','瞬'],['巨蟹宮','デスマスク','紫龍'],['獅子宮','アイオリア','星矢'],['処女宮','シャカ','瞬'],['天蠍宮','ミロ','氷河'],['磨羯宮','シュラ','紫龍'],['宝瓶宮','カミュ','氷河'],['双魚宮','アフロディーテ','瞬'],['ER','エクストラ','-']];
+function guT(){var g=GU[S.gu||0];return g[0]+' '+g[1]+'／青銅:'+g[2];}
+function guB(){var a=[];for(var i=0;i<GU.length;i++)a.push([GU[i][0]+'（'+GU[i][1]+'）','青銅：'+GU[i][2]+(i==(S.gu||0)?'　← 今ここ':''),i==(S.gu||0)?'#1f4a5a':'#333']);lst('今いる宮（タップで変更）',a,function(i){snap();S.gu=i;save();rd();});}
+var SK=['ブースト×2','ブースト×4','バーニング','Vチャレ','Vストック','Vチャレ＋α','鳳凰Vチャレ','鳳凰Vストック','金牛激震','双児宮アナザー','処女宮 特殊','天蠍宮 特殊'];
+function seiki(){pick('星輝の加護の恩恵',SK,function(i){var t=SK[i];
+if(t=='Vチャレ'||t=='Vチャレ＋α'||t=='鳳凰Vチャレ'){var gd=t=='鳳凰Vチャレ',op=gd?['金V1','金V2','金V3']:['×（0個）','銀v1','銀v2','銀v3','銀v4','銀v5+'];return pick(gd?'金V何個？':'銀v何個？（EX込み）',op,function(k){var n=gd?k+1:k;snap();if(gd){S.sg=(S.sg||0)+n;kgSet('一輝','鳳凰V');}else S.sv=(S.sv||0)+n;note('星:'+t+(n?vs(n,gd):'×'));add('星輝:'+t+(n?(gd?'金V':'銀v')+n:'×'));save();rd();},3);}
+if(t=='金牛激震'){var KJ=['V×3','V×5','V×7','鳳凰1＋V6'],KN=[[3,0],[5,0],[7,0],[6,1]];return pick('金牛激震の結果',KJ,function(k){snap();S.sv=(S.sv||0)+KN[k][0];S.sg=(S.sg||0)+KN[k][1];note('金牛激震'+vs(KN[k][0],0)+vs(KN[k][1],1));add('金牛激震'+KJ[k]);save();rd();},2);}
+if(t=='双児宮アナザー'){var a=[];for(var q=2;q<GU.length;q++)a.push(GU[q][0]);return pick('どこまで飛んだ？',a,function(k){snap();S.gu=k+2;S.guF=1;note('アナザー→'+GU[k+2][0]);add('アナザー→'+GU[k+2][0]);save();rd();},3);}
+snap();if(t=='Vストック'){S.sv=(S.sv||0)+1;note('星:'+vs(1,0));}else if(t=='鳳凰Vストック'){S.sg=(S.sg||0)+1;note('星:'+vs(1,1));}else note('星:'+t);add('星輝:'+t);save();rd();},3);}
+function serif(){lst('AT中のセリフ（今の宮の青銅：'+GU[S.gu||0][2]+'）',AS,function(i){snap();var e=AS[i][3];if(e==1||e==3)S.sl[0]=ci(S.cyc);if(e==3)S.sl[1]='①';if(e==2&&(S.sl[0]=='?'||S.sl[0]=='≤4'))S.sl[0]='≤3';var nm=AS[i][0].replace('（','').replace('）','').replace('文字','');note(nm);add('セリフ:'+nm);save();rd();});}
+function voice(){lst('Vチャレ失敗・EX終了時のPUSHボイス',AV,function(i){snap();var k=AV[i][3],nm=AV[i][0].split('（')[0];if(k=='?')kg('どれか',1,'声');else if(k)kgSet(k,'声'+ci(S.cyc));note('声:'+nm);add('声:'+nm);save();rd();});}
+function vs(n,g){var a='';for(var q=0;q<n;q++)a+=g?'<b style="color:#fd3">V</b>':'<b style="color:#fff">v</b>';return a;}
+function vch(){if(S.stk!=null)return stkR('ストック分の結果',['〇','×'],function(k,R0){R0.e+=k?'×':'〇';add('ストックV'+(k?'×':'〇'));});
+pick('Vチャレの契機は？',['規定','レア役'],function(src){pick('どのVチャレ？',['Vチャレ','鳳凰V','EX'],function(ty){var gd=ty==1,op=gd?['金V1','金V2','金V3']:['×（0個）','銀v1','銀v2','銀v3','銀v4','銀v5+'];
+pick(gd?'金V何個？（失敗でも1個）':'銀v何個？',op,function(k){var n=gd?k+1:k,nm=['V','鳳凰V','EX'][ty],t=nm+(n?(gd?'金V':'銀v')+n:'×');snap();
+if(gd)S.sg=(S.sg||0)+n;else S.sv=(S.sv||0)+n;
+note((src?'レア':'')+nm+(n?vs(n,gd):'×'));if(src==0){reach(t);S.pr=null;}if(gd)kgSet('一輝','鳳凰V');add((src?'レア':'')+t);},3);},3);},2);}
+function setB(){if(S.s>0&&((S.sv||0)+(S.sg||0))>0){var o=['自力突破'];if(S.sv)o.unshift('銀vで継続');if(S.sg)o.push('金Vで継続');return pick('前のセットのバトルは？',o,function(k){var w=o[k];snap();if(w=='銀vで継続'){S.sv--;note('<s>'+vs(1,0)+'</s>');}else if(w=='金Vで継続'){S.sg--;note('<s>'+vs(1,1)+'</s>');}add(w);setB2();},3);}setB2();}
+function setB2(){pick('セット'+(S.s+1)+'：何周期目？',C,function(i){if(S.guF)S.guF=0;else S.gu=S.s==0?0:Math.min((S.gu||0)+1,GU.length-1);var c=i+1,p=['不明'];for(var n=0;n<12;n++)p.push(n+'pt');
 pick('火時計のpt',p,function(j){snap();S.s++;for(var z=0;z<c-1;z++){var q=cell(z);if(!q.r){q.r='→';q.a=1;q.s=S.s>1?S.s-1:0;}}S.cyc=c;cell(c-1).a=1;note('S'+S.s+(j?':'+(j-1)+'pt':''));add(ci(c)+(j?(j-1)+'-':''),'st');},4);});}
 function bat(){snap();note('バトル×');add('バトル×');}
 function atEnd(){var a=[];for(var q=0;q<END.length;q++)a.push([END[q],ENDD[q],'#333']);lst('AT終了画面',a,function(i){numIn('獲得枚数（なければそのまま決定）',function(n){pick('終了後の天井',['AT後','上位AT後'],function(k){snap();var he=hAT();if(he){he.mai=n;he.scr=i;}add((n?n+'枚 ':'')+END[i],'ae');S.m='N';S.s=0;S.tj=k?'上位AT後':'AT後';cell(S.cyc-1);S.lp=[S.rows.length-1,S.cyc-1];save();rd();ICH=1;pkI('AT終了後のアイキャッチ（出なければ閉じる）');},2);});});}
@@ -205,7 +234,7 @@ for(var i=0;i<6;i++)h+='<div style="color:#888;font-size:12px">'+C[i]+'</div>';h
 var n=S.rows.length;
 for(var r=0;r<n;r++){var R0=S.rows[r],now=r==n-1,kk=now?S.sl[0]:R0.k;
 h+=lab(r,now?'今':r+1,now?'#fc6':'#888',now?'fs(0)':'');
-for(var j=1;j<=6;j++)h+=cellH(R0.c[j-1],j,now?S.sl[0]:(kk&&bad(kk,j)?kk:null),now&&j==S.cyc,'ce('+r+','+j+')',kgAt(r,j-1));
+for(var j=1;j<=6;j++)h+=cellH(R0.c[j-1],j,now?S.sl[0]:(kk&&bad(kk,j)?kk:null),now&&j==S.cyc,'ce('+r+','+j+')',(R0.c[j-1]||now&&j==S.cyc)?kgAt(r,j-1):null);
 h+='<div style="font-size:10px;color:#9d9;line-height:1.2">'+(R0.e||'')+(kk&&kk!='?'?'<div style="color:#f9c">'+kk+'</div>':'')+'</div>';}
 for(var f=1;f<5;f++){h+=lab(n-1+f,'+'+f,'#666','fs('+f+')');for(var j2=1;j2<=6;j2++)h+=cellH(null,j2,S.sl[f],false,'fs('+f+')');h+='<div style="font-size:10px;color:#f9c">'+(S.sl[f]!='?'?S.sl[f]:'')+'</div>';}
 h+='</div>';
@@ -219,10 +248,10 @@ function hAT(){if(!S.hs)return null;for(var i=S.hs.length-1;i>=0;i--)if(S.hs[i].
 var ZC=[214.4,214.1,211.7,202.5,197.2,200.3],ZA=[364.2,356.1,345.6,322.3,313.7,310.5];
 function isCZ(e){return e.r.indexOf('CZ')>=0||e.r.indexOf('影')>=0||e.k.indexOf('天井WAY')==0||e.k.indexOf('天井影')==0||e.k=='影';}
 function isAT(e){return e.r.indexOf('AT')>=0;}
-function hTx(e){return (e.g||'?')+'G '+e.k+' '+e.r+(e.mai?' '+e.mai+'枚':'')+(e.scr!=null?' '+END[e.scr]+'('+ENDD[e.scr]+')':'')+(e.ic?' IC:'+e.ic:'');}
+function hTx(e){return (e.g||'?')+'G '+e.k+(e.kk?'('+e.kk+')':'')+' '+e.r+(e.mai?' '+e.mai+'枚':'')+(e.scr!=null?' '+END[e.scr]+'('+ENDD[e.scr]+')':'')+(e.ic?' IC:'+e.ic:'');}
 function hisH(){var H=S.hs||[],h='',tot=+(S.cg||0),cz=0,at=0,mai=0;
 for(var i=0;i<H.length;i++){var e=H[i];tot+=+(e.g||0);if(isCZ(e))cz++;if(isAT(e))at++;mai+=+(e.mai||0);
-h+='<div onclick="hE('+i+')" style="background:'+(isAT(e)?'#35204f':'#222')+';border-radius:6px;padding:7px 8px;margin-bottom:3px;font-size:14px"><b>'+(i+1)+'</b> '+(e.g?e.g:'<span style="color:#f66">G?</span>')+' <b>'+e.k+'</b> '+e.r+(e.mai?' '+e.mai+'枚':'')+(e.scr!=null?'<div style="font-size:12px;color:#fd8">'+END[e.scr]+'：'+ENDD[e.scr]+'</div>':'')+(e.ic?'<div style="font-size:12px;color:#9cf">IC：'+e.ic+'</div>':'')+'</div>';}
+h+='<div onclick="hE('+i+')" style="background:'+(isAT(e)?'#35204f':'#222')+';border-radius:6px;padding:7px 8px;margin-bottom:3px;font-size:14px"><b>'+(i+1)+'</b> '+(e.g?e.g:'<span style="color:#f66">G?</span>')+' <b>'+e.k+'</b>'+(e.kk?'<span style="color:#fc9">('+e.kk+')</span>':'')+' '+e.r+(e.mai?' '+e.mai+'枚':'')+(e.scr!=null?'<div style="font-size:12px;color:#fd8">'+END[e.scr]+'：'+ENDD[e.scr]+'</div>':'')+(e.ic?'<div style="font-size:12px;color:#9cf">IC：'+e.ic+'</div>':'')+'</div>';}
 if(!H.length)h+='<div style="color:#666;padding:10px">マップでWAY・影・直撃・天井を押すと、ここに自動で入る</div>';
 function rt(n){return n?'1/'+(tot/n).toFixed(1):'-';}
 var t=TJ[S.tj]||TJ['AT後'];
@@ -239,9 +268,14 @@ return h;}
 function cgIn(){numIn('今のハマりG数（液晶）',function(v){snap();S.cg=v;save();rd();});}
 var HK=['①','②','③','④','⑤','⑥','天井WAY','天井影','天井直撃','影','直撃','ストック','手動'],HR=['CZ〇 AT','CZ×','影〇 AT','影×','〇 AT','×','AT'];
 function hE(i){var e=S.hs[i],h='<h3>履歴'+(i+1)+'：'+hTx(e)+'</h3><div class="g">';
-var b=[['G数（液晶）','hG'],['契機','hK'],['結果','hR'],['枚数','hM'],['終了画面','hS'],['IC','hI']];
-for(var q=0;q<6;q++)h+='<button style="height:52px" onclick="'+b[q][1]+'('+i+')">'+b[q][0]+'</button>';
+var b=[['G数（液晶）','hG'],['契機','hK'],['契機の契機','hKK'],['結果','hR'],['枚数','hM'],['終了画面','hS'],['IC','hI']];
+for(var q=0;q<7;q++)h+='<button style="height:52px" onclick="'+b[q][1]+'('+i+')">'+b[q][0]+'</button>';
 ovr(h+'</div><button style="width:100%;background:#633;margin-top:4px" onclick="hD('+i+')">この行を削除</button>'+cb());}
+var KKO=['通常','高確','超高確','HC中','🔴','強🔴','🟢','チャンス目','小宇宙目','ベル','リプ','フリーズ'],KKS=[];
+function hKK(i){KKS=(S.hs[i].kk||'').split(' ').filter(function(x){return x;});kkH(i);}
+function kkH(i){var h='<h3>契機の契機（複数OK）</h3><div class="g" style="grid-template-columns:repeat(4,1fr)">';for(var q=0;q<KKO.length;q++){var on=KKS.indexOf(KKO[q])>=0;h+='<button style="'+(on?'background:#2a6fb0':'')+'" onclick="kkT('+i+','+q+')">'+KKO[q]+'</button>';}
+ovr(h+'</div><button style="width:100%;background:#2f5d2f;height:50px" onclick="snap();S.hs['+i+'].kk=KKS.join(\' \');save();rd();hE('+i+')">決定</button>'+cb());}
+function kkT(i,q){var k=KKO[q],p=KKS.indexOf(k);if(p>=0)KKS.splice(p,1);else KKS.push(k);kkH(i);}
 function hG(i){numIn('液晶G数',function(v){snap();S.hs[i].g=v;save();rd();hE(i);});}
 function hM(i){numIn('獲得枚数',function(v){snap();S.hs[i].mai=v;save();rd();hE(i);});}
 function hK(i){pick('契機',HK,function(k){snap();S.hs[i].k=HK[k];save();rd();hE(i);},4);}
@@ -255,9 +289,10 @@ function pg(v){S.pg=v;T=null;save();rd();}
 function rd(){
 var t=TJ[S.tj]||TJ['AT後'],A=S.m=='A',HP=S.pg=='his',h='<div class="g" style="grid-template-columns:1fr 1fr;margin-bottom:6px"><button style="height:36px;'+(HP?'':'background:#2a6fb0')+'" onclick="pg(\'map\')">マップ</button><button style="height:36px;'+(HP?'background:#2a6fb0':'')+'" onclick="pg(\'his\')">履歴</button></div><div class="ln" style="display:flex;justify-content:space-between;align-items:center"><div>';
 h+='<span class="tg" style="background:'+(A?'#5a2f86':'#2c2c2c')+'">'+(A?'AT'+S.at+(S.s?'-S'+S.s:''):'通常')+'</span>';
-h+='<span class="tg" onclick="eCyc()" style="font-size:16px;font-weight:bold">'+ci(S.cyc)+'周期</span></div>';
+h+=(A&&(S.sv||S.sg)?'<span class="tg">'+vs(S.sv||0,0)+vs(S.sg||0,1)+'</span>':'')+'<span class="tg" onclick="eCyc()" style="font-size:16px;font-weight:bold">'+ci(S.cyc)+'周期</span></div>';
 h+='<div><button class="hb" style="background:#1f4a5a" onclick="slotB()">S'+SL+(S.nm?':'+S.nm.slice(0,5):'')+'</button><button class="hb" onclick="out()">出力</button><button class="hb" onclick="nw()">新規</button></div></div>';
 h+='<div class="ln" style="font-size:13px"><span class="tg" onclick="eTj()">'+S.tj+'</span>CZ間'+t[0]+' / AT間'+t[1]+' / 最大'+t[2]+'周期</div>';
+if(A)h+='<div class="ln" onclick="guB()" style="background:#2a1f40;border-radius:6px;padding:2px 6px">'+guT()+' <span style="color:#99a;font-size:11px">（タップで宮表）</span></div>';
 h+='<div class="ln" onclick="eKg()">加護：'+kgHtml()+'</div>';
 var lt=S.log.length?S.log[S.log.length-1].t:'なし';
 h+=T?'<div class="ln" onclick="T=null;rd()" style="background:#4a1840;border-radius:6px;padding:2px 6px">選択中：<b style="color:#f5c">'+(T[0]+1)+'行目'+C[T[1]]+'</b>（ここに入力／タップで解除）</div>':'<div class="ln" style="background:#0d2a33;border-radius:6px;padding:2px 6px">最後：<b style="color:#6ef">'+lt+'</b></div>';
@@ -266,7 +301,7 @@ $('lg').innerHTML=HP?hisH():mapH();var lg=$('lg');lg.scrollTop=HP?0:lg.scrollHei
 var p;
 if(HP){$('pn').innerHTML='<div class="g" style="grid-template-columns:repeat(3,1fr)">'+B('＋追加','hNew()','background:#2f5d2f')+B('履歴コピー','hCp()','background:#1f4a5a')+B('取消','undo()','background:#633')+'</div>';return;}
 p='<div class="g" style="grid-template-columns:repeat(4,1fr)">';
-if(A)p+=B('セット','setB()','background:#5a2f86')+B('Vチャレ','vch()','background:#7a2a63')+B('AT終','atEnd()','background:#5a2f86')+'<div></div></div><div class="g" style="grid-template-columns:repeat(4,1fr)"><div></div><div></div>'+B('取消','undo()','background:#633')+B('▶通常','tgl()','background:#244');
+if(A)p+=B('セット','setB()','background:#5a2f86')+B('Vチャレ','vch()','background:#7a2a63')+B('AT終','atEnd()','background:#5a2f86')+B('ボイス','voice()','background:#3a3a5c;font-size:15px')+'</div><div class="g" style="grid-template-columns:repeat(4,1fr)">'+B('セリフ','serif()','background:#3a3a5c;font-size:15px')+B('星輝','seiki()','background:#6b5a12')+B('取消','undo()','background:#633')+B('▶通常','tgl()','background:#244');
 else p+=B('周期×','cx()')+B('WAY','wayB()','background:#2f5d2f')+B('影','kage()','background:#3a3a5c')+B('直撃','choku()','background:#7a2a63')+'</div><div class="g" style="grid-template-columns:repeat(4,1fr)">'+B('天井','tenB()','background:#7a6a12')+'<div></div>'+B('取消','undo()','background:#633')+B('▶AT','tgl()','background:#5a2f86');
 p+='</div><div class="g" style="grid-template-columns:repeat(5,1fr)"><button onclick="pkW()">下部</button><button onclick="pkI()">IC</button><button onclick="pkK()">カード</button><button onclick="pkR()">レア</button><button onclick="pkO()">他</button></div>';
 $('pn').innerHTML=p;}
